@@ -15,7 +15,7 @@ export function PrivacyContent() {
           Privacy Notice
         </h1>
         <p className="mt-4 text-lg text-stone-600 leading-relaxed">
-          Last updated: {lastUpdated} · Effective: {effectiveDate}
+          Last updated: {lastUpdated} &middot; Effective: {effectiveDate}
         </p>
       </header>
 
@@ -35,7 +35,7 @@ export function PrivacyContent() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none text-stone-700">
               <p>
-                The One Human Initiative ("we", "us", "our") is committed to protecting your privacy.
+                The One Human Initiative (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;) is committed to protecting your privacy.
                 This Privacy Notice explains how we collect, use, and safeguard information when you visit our website
                 or participate in the campaign.
               </p>
@@ -64,7 +64,7 @@ export function PrivacyContent() {
             />
             <DataCard
               title="Browser Participation Tokens"
-              description="For petitions and voting, we generate a random token stored in your browser's localStorage. A hashed version (SHA-256) is sent to our server. This token is not linked to your identity."
+              description="For petitions and voting, we generate a random token stored in your browser&apos;s localStorage. A hashed version (SHA-256) is sent to our server. This token is not linked to your identity."
               required={false}
             />
             <DataCard
@@ -118,7 +118,7 @@ export function PrivacyContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </span>
-            What We DON'T Do
+            What We DON&apos;T Do
           </h2>
           <div className="space-y-3">
             <DontCard text="Track you across the web or build advertising profiles" />
@@ -150,11 +150,11 @@ export function PrivacyContent() {
               </p>
               <ul>
                 <li><strong>Bitcoin/Solana:</strong> On-chain transactions are public by design. Addresses and amounts are visible on block explorers.</li>
-                <li><strong>Phantom Wallet:</strong> Collects data per <a href="https://phantom.app/privacy" target="_blank" rel="noopener noreferrer" className="text-earth-600 hover:underline">Phantom's Privacy Policy</a>.</li>
-                <li><strong>Ko-fi:</strong> Collects data per <a href="https://ko-fi.com/privacy" target="_blank" rel="noopener noreferrer" className="text-earth-600 hover:underline">Ko-fi's Privacy Policy</a> (when enabled).</li>
+                <li><strong>Phantom Wallet:</strong> Collects data per <a href="https://phantom.app/privacy" target="_blank" rel="noopener noreferrer" className="text-earth-600 hover:underline">Phantom&apos;s Privacy Policy</a>.</li>
+                <li><strong>Ko-fi:</strong> Collects data per <a href="https://ko-fi.com/privacy" target="_blank" rel="noopener noreferrer" className="text-earth-600 hover:underline">Ko-fi&apos;s Privacy Policy</a> (when enabled).</li>
               </ul>
               <p className="font-semibold">
-                We recommend reviewing each processor's privacy policy before contributing.
+                We recommend reviewing each processor&apos;s privacy policy before contributing.
               </p>
             </CardContent>
           </Card>
@@ -187,14 +187,14 @@ export function PrivacyContent() {
               reason="User-controlled; delete anytime via browser settings or deletion request"
             />
             <RetentionCard
-              period="Per Provider Policy"
-              data="Payment processor data (blockchain, Phantom, Ko-fi)"
-              reason="Controlled by respective providers, not by us"
+              period="Standard Web Logs (Provider Policy)"
+              data="Hashed IPs for rate limiting, access logs"
+              reason="Security, abuse prevention; per Vercel/Supabase retention policies"
             />
           </div>
         </section>
 
-        {/* Security */}
+        {/* Your Rights */}
         <section>
           <h2 className="text-2xl font-bold text-charcoal-900 mb-6 flex items-center gap-2">
             <span className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
@@ -202,36 +202,78 @@ export function PrivacyContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </span>
-            Security Measures
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SecurityCard title="Row Level Security (RLS)" description="All database tables have RLS policies. Public access is restricted to published data only. Admin access requires Supabase Auth with MFA." />
-            <SecurityCard title="Service Role Isolation" description="Service role key used only in server-side admin API routes. Never exposed to browser. All admin actions logged in audit trail." />
-            <SecurityCard title="HTTPS & HSTS" description="Enforced via Vercel. All connections encrypted. HSTS header prevents downgrade attacks." />
-            <SecurityCard title="CSP Headers" description="Content Security Policy restricts scripts, styles, and frames. Inline scripts blocked. Nonce-based for necessary inline content." />
-            <SecurityCard title="EXIF Stripping" description="Uploaded evidence images have metadata stripped server-side using sharp + exifr before storage." />
-            <SecurityCard title="No Raw IP Storage" description="Rate limiting uses client-side hashed IPs. Server never stores raw IPs in database." />
-          </div>
-        </section>
-
-        {/* Your Rights */}
-        <section>
-          <h2 className="text-2xl font-bold text-charcoal-900 mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </span>
             Your Rights
           </h2>
           <div className="space-y-4">
-            <RightCard right="Access" description="Request a copy of data we hold about your participation (contribution records linked to your transaction hashes, votes)." />
-            <RightCard right="Rectification" description="Request correction of inaccurate data (e.g., incorrect transaction amount)." />
-            <RightCard right="Erasure" description="Request deletion of your repayment contact link and browser token. Contribution records cannot be deleted (audit requirement)." />
-            <RightCard right="Portability" description="Receive your data in a structured, machine-readable format (JSON)." />
-            <RightCard right="Object/Restrict" description="Object to processing for specific purposes (e.g., voting participation)." />
-            <RightCard right="Withdraw Consent" description="Withdraw consent for optional data (repayment contact) at any time." />
+            <RightCard
+              title="Access & Portability"
+              description="Request a copy of your personal data (contribution records, tokens, contact links) in a structured format."
+            />
+            <RightCard
+              title="Deletion"
+              description="Request deletion of your repayment contact links and browser tokens. Contribution records are retained for transparency."
+            />
+            <RightCard
+              title="Objection"
+              description="Object to processing for rate limiting or analytics. Note: this may limit campaign functionality."
+            />
+            <RightCard
+              title="Withdraw Consent"
+              description="Remove your repayment contact link at any time via the contribution confirmation page or by contacting us."
+            />
           </div>
+        </section>
+
+        {/* Security */}
+        <section>
+          <h2 className="text-2xl font-bold text-charcoal-900 mb-6 flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9" />
+              </svg>
+            </span>
+            Security
+          </h2>
+          <Card variant="outlined" padding="lg">
+            <CardContent className="prose prose-sm max-w-none text-stone-700">
+              <ul>
+                <li>All data encrypted in transit (TLS 1.2+) and at rest (AES-256)</li>
+                <li>Row Level Security (RLS) on all database tables</li>
+                <li>Service role key restricted to server-side admin APIs only</li>
+                <li>No raw IP addresses stored (hashed for rate limiting)</li>
+                <li>Admin actions logged in audit trail (excludes secrets)</li>
+                <li>EXIF metadata stripped from uploaded images</li>
+                <li>Content Security Policy headers configured</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* International Transfers */}
+        <section>
+          <h2 className="text-2xl font-bold text-charcoal-900 mb-6 flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center text-cyan-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </span>
+            International Data Transfers
+          </h2>
+          <Card variant="outlined" padding="lg">
+            <CardContent className="prose prose-sm max-w-none text-stone-700">
+              <p>
+                Our hosting provider (Vercel) and database provider (Supabase) may process data in the United States
+                and other jurisdictions. They provide appropriate safeguards including Standard Contractual Clauses
+                and comply with EU/UK data protection requirements.
+              </p>
+              <p className="font-semibold">
+                Blockchain transactions are inherently global. On-chain data is replicated worldwide and cannot be
+                restricted by jurisdiction.
+              </p>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Contact */}
@@ -242,42 +284,17 @@ export function PrivacyContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </span>
-            Contact Us
+            Contact
           </h2>
           <Card variant="outlined" padding="lg">
             <CardContent className="prose prose-sm max-w-none text-stone-700">
               <p>
-                For privacy inquiries, data subject requests, or concerns about this notice:
-              </p>
-              <ul>
-                <li><strong>Email:</strong> privacy@onehumaninitiative.org</li>
-                <li><strong>Response Time:</strong> Within 30 days (GDPR standard)</li>
-                <li><strong>Verification:</strong> We may request proof of identity for data requests</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* International Transfers */}
-        <section>
-          <h2 className="text-2xl font-bold text-charcoal-900 mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-              </svg>
-            </span>
-            International Data Transfers
-          </h2>
-          <Card variant="outlined" padding="lg">
-            <CardContent className="prose prose-sm max-w-none text-stone-700">
-              <p>
-                Our hosting (Vercel) and database (Supabase) providers may process data in the United States
-                and other jurisdictions. Both providers offer Standard Contractual Clauses (SCCs) and adhere
-                to GDPR transfer mechanisms.
+                For privacy inquiries, data requests, or to exercise your rights, please contact us via the
+                <a href="/updates" className="text-earth-600 hover:underline">Updates</a> page contact form
+                or submit a request through the campaign website.
               </p>
               <p>
-                Blockchain transactions are inherently global and public. By contributing on-chain, you accept
-                that transaction data is replicated across nodes worldwide.
+                We will respond within 30 days as required by applicable data protection laws.
               </p>
             </CardContent>
           </Card>
@@ -297,7 +314,7 @@ export function PrivacyContent() {
             <CardContent className="prose prose-sm max-w-none text-stone-700">
               <p>
                 We may update this Privacy Notice to reflect changes in our practices or legal requirements.
-                The "Last updated" date at the top will be revised. Material changes will be announced
+                The &ldquo;Last updated&rdquo; date at the top will be revised. Material changes will be announced
                 on the <a href="/updates" className="text-earth-600 hover:underline">Updates</a> page.
               </p>
               <p>
@@ -340,14 +357,12 @@ function UsageCard({ title, description }: { title: string; description: string 
 
 function DontCard({ text }: { text: string }) {
   return (
-    <Card variant="outlined" padding="md" className="border-red-100 bg-red-50">
-      <CardContent className="flex items-center gap-3">
-        <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        <p className="text-sm text-red-700">{text}</p>
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-100">
+      <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span className="text-sm text-red-800">{text}</span>
+    </div>
   );
 }
 
@@ -355,39 +370,23 @@ function RetentionCard({ period, data, reason }: { period: string; data: string;
   return (
     <Card variant="default" padding="md">
       <CardContent>
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
           <div>
-            <h3 className="font-semibold text-charcoal-900 mb-1">{period}</h3>
-            <p className="text-sm text-charcoal-700 mb-1"><strong>Data:</strong> {data}</p>
-            <p className="text-sm text-stone-600"><strong>Reason:</strong> {reason}</p>
+            <span className="font-medium text-charcoal-900">{period}</span>
+            <p className="text-sm text-stone-600 mt-0.5">{data}</p>
           </div>
+          <span className="text-xs text-stone-500 whitespace-nowrap">{reason}</span>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function SecurityCard({ title, description }: { title: string; description: string }) {
+function RightCard({ title, description }: { title: string; description: string }) {
   return (
     <Card variant="default" padding="md">
       <CardContent>
         <h3 className="font-semibold text-charcoal-900 mb-1">{title}</h3>
-        <p className="text-sm text-stone-600">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function RightCard({ right, description }: { right: string; description: string }) {
-  return (
-    <Card variant="default" padding="md">
-      <CardContent>
-        <h3 className="font-semibold text-charcoal-900 mb-1">{right}</h3>
         <p className="text-sm text-stone-600">{description}</p>
       </CardContent>
     </Card>

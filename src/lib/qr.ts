@@ -64,7 +64,7 @@ export function generateSolanaURI(address: string, options?: { amount?: number; 
 /**
  * Generate QR code data URI
  */
-export async function generateQRCodeDataURL(uri: string, size: number = 256): Promise<string> {
+export async function generateQRCodeDataURL(uri: string, _size: number = 256): Promise<string> {
   // This is a placeholder - in a real implementation, you'd use a QR code library
   // For now, we'll use a simple canvas-based approach or return a placeholder
   // The actual QRCode component will handle rendering

@@ -4,6 +4,8 @@ import { getAdminClient } from '@/lib/supabase/admin';
 import { updateSchema } from '@/lib/validators';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -21,12 +23,11 @@ export async function GET() {
       return NextResponse.json({ updates: [] });
     }
 
-    // Get published updates only
+    // Get published updates from secure view
     const { data: updates, error } = await supabase
-      .from('campaign_updates')
-      .select('id, title, content, image_url, published_at, created_at')
+      .from('campaign_updates_public')
+      .select('id, title, content, image_url, published_at')
       .eq('campaign_id', campaign.id)
-      .eq('status', 'published')
       .order('published_at', { ascending: false });
 
     if (error) {

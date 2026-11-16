@@ -4,6 +4,8 @@ import { getAdminClient } from '@/lib/supabase/admin';
 import { expenseSchema } from '@/lib/validators';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -18,25 +20,30 @@ export async function GET() {
       .single();
 
     if (!campaign) {
-      return NextResponse.json({ expenses: [] });
+      return NextResponse.json({ expenses: [], summary: [] });
     }
 
-    // Get published expenses only
+    // Get published expenses summary from secure view (by category)
+    const { data: summary } = await supabase
+      .from('expense_summary_public')
+      .select('category, expense_count, total_amount, published_amount')
+      .eq('campaign_id', campaign.id);
+
+    // Get individual published expenses from secure view
     const { data: expenses, error } = await supabase
-      .from('expenses')
+      .from('expenses_published_public')
       .select('id, category, description, amount, currency, published_at, evidence_url')
       .eq('campaign_id', campaign.id)
-      .eq('status', 'published')
       .order('published_at', { ascending: false });
 
     if (error) {
-      return NextResponse.json({ expenses: [] });
+      return NextResponse.json({ expenses: [], summary: summary || [] });
     }
 
-    return NextResponse.json({ expenses: expenses || [] });
+    return NextResponse.json({ expenses: expenses || [], summary: summary || [] });
   } catch (error) {
     console.error('Expenses API error:', error);
-    return NextResponse.json({ expenses: [] });
+    return NextResponse.json({ expenses: [], summary: [] });
   }
 }
 

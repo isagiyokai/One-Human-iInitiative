@@ -4,9 +4,9 @@ import { Providers } from "@/components/providers/Providers";
 
 // System font stack for minimal, privacy-conscious design
 const fontSans = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-const fontMono = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace';
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://onehumaninitiative.org"),
   title: {
     default: "One Human Initiative",
     template: "%s | One Human Initiative",

@@ -49,14 +49,14 @@ export function computeCampaignStatus(
     return 'draft';
   }
 
+  // Target reached takes precedence over expired
+  if (campaign.confirmedAmount >= campaign.target) {
+    return 'target_reached';
+  }
+
   // Expired
   if (nowTime > end) {
     return 'expired';
-  }
-
-  // Target reached
-  if (campaign.confirmedAmount >= campaign.target) {
-    return 'target_reached';
   }
 
   // Active
@@ -211,4 +211,21 @@ export function validateTargetIncrease(currentTarget: number, requestedTarget: n
     return { valid: false, error: `Target must be at least $${MIN_TARGET.toLocaleString()}` };
   }
   return { valid: true };
+}
+
+export function formatCurrency(amount: number, currency = 'USD'): string {
+  switch (currency) {
+    case 'BTC':
+      return `${amount.toFixed(8)} BTC`;
+    case 'SOL':
+      return `${amount.toFixed(2)} SOL`;
+    case 'USD':
+    default:
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+  }
 }

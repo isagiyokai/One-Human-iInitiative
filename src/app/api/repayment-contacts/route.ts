@@ -5,6 +5,8 @@ import { repaymentContactSchema } from '@/lib/validators';
 import { validateKoFiUrl, validateBuyMeACoffeeUrl } from '@/lib/utils';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

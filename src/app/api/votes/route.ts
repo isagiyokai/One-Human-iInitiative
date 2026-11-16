@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getAdminClient } from '@/lib/supabase/admin';
 import { voteSchema } from '@/lib/validators';
 import { hashToken } from '@/lib/browser-token';
 import { z } from 'zod';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
@@ -16,22 +17,25 @@ export async function GET(request: Request) {
 
     const supabase = await createClient();
 
-    const { data: votes, error } = await supabase
-      .from('votes')
-      .select('choice')
-      .eq('petition_id', petitionId);
+    // Get vote counts from secure view
+    const { data: petition, error } = await supabase
+      .from('petition_aggregates_public')
+      .select('yes_votes, no_votes, total_votes')
+      .eq('id', petitionId)
+      .single();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const yes = votes?.filter(v => v.choice === 'yes').length || 0;
-    const no = votes?.filter(v => v.choice === 'no').length || 0;
+    if (!petition) {
+      return NextResponse.json({ error: 'Petition not found' }, { status: 404 });
+    }
 
     return NextResponse.json({
-      yes,
-      no,
-      total: yes + no
+      yes: petition.yes_votes || 0,
+      no: petition.no_votes || 0,
+      total: petition.total_votes || 0
     });
   } catch (error) {
     console.error('Votes GET error:', error);

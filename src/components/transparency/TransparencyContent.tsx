@@ -25,65 +25,18 @@ interface TransparencyData {
   categories: { category: string; total: number; percentage: number }[];
 }
 
-const mockData: TransparencyData = {
-  totalRaised: 25750,
-  totalExpenses: 8420,
-  remainingBalance: 17330,
-  contributorCount: 142,
-  expenses: [
-    {
-      id: '1',
-      category: 'Medical',
-      description: 'Emergency surgery and hospitalization',
-      amount: 5000,
-      date: '2024-01-15',
-      status: 'published',
-      evidenceUrl: '#',
-    },
-    {
-      id: '2',
-      category: 'Living Expenses',
-      description: 'Rent and utilities for 3 months',
-      amount: 2400,
-      date: '2024-01-20',
-      status: 'published',
-      evidenceUrl: '#',
-    },
-    {
-      id: '3',
-      category: 'Medical',
-      description: 'Follow-up appointments and medication',
-      amount: 850,
-      date: '2024-02-01',
-      status: 'published',
-      evidenceUrl: '#',
-    },
-    {
-      id: '4',
-      category: 'Transportation',
-      description: 'Medical transport and travel costs',
-      amount: 170,
-      date: '2024-02-10',
-      status: 'published',
-    },
-    {
-      id: '5',
-      category: 'Living Expenses',
-      description: 'Groceries and essential supplies',
-      amount: 300,
-      date: '2024-02-15',
-      status: 'published',
-    },
-  ],
-  categories: [
-    { category: 'Medical', total: 5850, percentage: 69.5 },
-    { category: 'Living Expenses', total: 2700, percentage: 32.1 },
-    { category: 'Transportation', total: 170, percentage: 2.0 },
-  ],
+// Empty state - data will be fetched from API
+const emptyData: TransparencyData = {
+  totalRaised: 0,
+  totalExpenses: 0,
+  remainingBalance: 0,
+  contributorCount: 0,
+  expenses: [],
+  categories: [],
 };
 
 export function TransparencyContent() {
-  const { totalRaised, totalExpenses, remainingBalance, contributorCount, expenses, categories } = mockData;
+  const { totalRaised, totalExpenses, remainingBalance, contributorCount, expenses, categories } = emptyData;
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">

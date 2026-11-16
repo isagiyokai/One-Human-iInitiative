@@ -44,7 +44,7 @@ export function AdminCampaignSettings() {
       // In real implementation, this would call the admin campaign API
       await new Promise(resolve => setTimeout(resolve, 1000));
       setMessage({ type: 'success', text: 'Campaign settings saved successfully!' });
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
     } finally {
       setIsSaving(false);

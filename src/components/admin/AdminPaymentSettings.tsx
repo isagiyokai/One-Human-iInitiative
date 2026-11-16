@@ -4,7 +4,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 
 const paymentMethods = [
   {
@@ -98,7 +97,7 @@ export function AdminPaymentSettings() {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
       setMessage({ type: 'success', text: 'Payment settings saved successfully!' });
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
     } finally {
       setIsSaving(false);

@@ -1,9 +1,7 @@
 import { createClient } from './supabase/browser';
 import { getAdminClient } from './supabase/admin';
-import { hashString } from './utils';
 
 const TOKEN_KEY = 'one-human-participation-token';
-const TOKEN_VERSION = 1;
 
 /**
  * Generate a new browser participation token
@@ -77,7 +75,7 @@ export async function registerBrowserToken(): Promise<{ success: boolean; tokenI
     }
 
     return { success: true, tokenId: data.id };
-  } catch (error) {
+  } catch {
     return { success: false, error: 'Failed to register token' };
   }
 }

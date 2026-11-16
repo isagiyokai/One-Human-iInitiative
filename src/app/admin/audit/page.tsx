@@ -19,7 +19,9 @@ export default async function AdminAuditLogPage() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options: any }>) {
+        setAll(
+          cookiesToSet: Array<{ name: string; value: string; options: { [key: string]: unknown } }>
+        ) {
           cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, options)
           );

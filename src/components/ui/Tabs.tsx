@@ -9,7 +9,7 @@ interface TabsProps {
   className?: string;
 }
 
-export function Tabs({ value, onValueChange, children, className = '' }: TabsProps) {
+export function Tabs({ children, className = '' }: TabsProps) {
   return (
     <div className={className} data-tabs>
       {children}

@@ -30,22 +30,15 @@ export function useReducedMotion(): boolean {
  * Hook to get animation duration based on reduced motion preference
  * Returns 0 if reduced motion is preferred, otherwise returns the provided duration
  */
-export function useAnimationDuration(
-  normalDuration: number,
-  prefersReducedMotion?: boolean
-): number {
-  const reduced = prefersReducedMotion ?? useReducedMotion();
+export function useAnimationDuration(normalDuration: number): number {
+  const reduced = useReducedMotion();
   return reduced ? 0 : normalDuration;
 }
 
 /**
  * Hook for conditional animation classes
  */
-export function useAnimationClass(
-  baseClass: string,
-  animateClass: string,
-  prefersReducedMotion?: boolean
-): string {
-  const reduced = prefersReducedMotion ?? useReducedMotion();
+export function useAnimationClass(baseClass: string, animateClass: string): string {
+  const reduced = useReducedMotion();
   return reduced ? baseClass : `${baseClass} ${animateClass}`;
 }

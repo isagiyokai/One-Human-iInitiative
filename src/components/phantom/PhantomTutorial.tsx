@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
 interface PhantomTutorialProps {
   isOpen: boolean;
@@ -357,7 +356,7 @@ function CompletionScreen({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h3 className="text-2xl font-bold text-charcoal-900">You're Ready!</h3>
+      <h3 className="text-2xl font-bold text-charcoal-900">You&apos;re Ready!</h3>
       <p className="text-stone-600 leading-relaxed">
         You now know how to set up Phantom Wallet and contribute to the campaign.
         Remember: keep your recovery phrase safe and never share it.

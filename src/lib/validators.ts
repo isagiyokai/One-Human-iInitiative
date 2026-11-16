@@ -20,11 +20,15 @@ export const campaignSchema = z.object({
 export const campaignSettingsSchema = z.object({
   bitcoinAddress: z.string().regex(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,59}$/, 'Invalid Bitcoin address'),
   solanaAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, 'Invalid Solana address'),
-  phantomUsername: z.string().regex(/^@[a-zA-Z0-9_]{3,30}$/, 'Invalid Phantom username (must start with @)'),
+  // Phantom usernames: alphanumeric only, 3-30 chars after @, no underscores
+  phantomUsername: z.string().regex(/^@[a-zA-Z0-9]{3,30}$/, 'Invalid Phantom username (must start with @, alphanumeric only, 3-30 chars)'),
   kofiEnabled: z.boolean(),
   kofiUrl: z.string().url().optional().or(z.literal('')),
   kofiLabel: z.string().max(100).optional(),
   kofiStatus: z.enum(['pending_approval', 'active', 'disabled']).optional(),
+}).refine(data => !data.kofiEnabled || (data.kofiUrl && data.kofiUrl !== ''), {
+  message: 'Ko-fi URL is required when Ko-fi is enabled',
+  path: ['kofiUrl'],
 });
 
 // Contribution validators
@@ -69,6 +73,9 @@ export const repaymentContactSchema = z.object({
   platform: z.enum(['ko-fi', 'buy-me-a-coffee']),
   url: z.string().url(),
   consentGiven: z.literal(true), // Must be explicitly true
+}).refine(data => data.url.startsWith('https://'), {
+  message: 'URL must use HTTPS',
+  path: ['url'],
 });
 
 // Expense validators

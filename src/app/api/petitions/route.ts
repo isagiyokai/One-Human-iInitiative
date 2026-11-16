@@ -5,6 +5,8 @@ import { petitionSchema } from '@/lib/validators';
 import { hashToken } from '@/lib/browser-token';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -22,9 +24,9 @@ export async function GET() {
       return NextResponse.json({ petition: null });
     }
 
-    // Get active petition (collecting or voting)
+    // Get active petition from secure view (includes vote aggregates)
     const { data: petition, error } = await supabase
-      .from('petitions')
+      .from('petition_aggregates_public')
       .select('*')
       .eq('campaign_id', campaign.id)
       .in('status', ['collecting', 'voting', 'approved', 'rejected'])
@@ -36,19 +38,14 @@ export async function GET() {
       return NextResponse.json({ petition: null });
     }
 
-    // Get vote counts
-    const { data: votes } = await supabase
-      .from('votes')
-      .select('choice')
-      .eq('petition_id', petition.id);
-
-    const yesVotes = votes?.filter(v => v.choice === 'yes').length || 0;
-    const noVotes = votes?.filter(v => v.choice === 'no').length || 0;
-
     return NextResponse.json({
       petition: {
         ...petition,
-        voteCounts: { yes: yesVotes, no: noVotes, total: yesVotes + noVotes },
+        voteCounts: {
+          yes: petition.yes_votes || 0,
+          no: petition.no_votes || 0,
+          total: petition.total_votes || 0
+        },
       },
     });
   } catch (error) {

@@ -5,6 +5,8 @@ import { campaignSettingsSchema } from '@/lib/validators';
 import { validateBitcoinAddress, validateSolanaAddress, validatePhantomUsername } from '@/lib/utils';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const supabase = await createClient();

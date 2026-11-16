@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Input, Textarea } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
 interface Petition {
@@ -115,21 +115,6 @@ export function AdminCommunity() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleApprove = (petitionId: string) => {
-    if (confirm('Approve this petition? This will increase the campaign target.')) {
-      console.log('Approved:', petitionId);
-      alert('Petition approved! (Demo - would call API in production)');
-    }
-  };
-
-  const handleReject = (petitionId: string) => {
-    const notes = prompt('Enter rejection reason:');
-    if (notes !== null) {
-      console.log('Rejected:', petitionId, notes);
-      alert('Petition rejected! (Demo - would call API in production)');
-    }
-  };
-
   const handleSaveNotes = async () => {
     if (!editingPetition) return;
 
@@ -141,7 +126,7 @@ export function AdminCommunity() {
       setMessage({ type: 'success', text: 'Admin notes saved successfully!' });
       setEditingPetition(null);
       setFormData({});
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Failed to save. Please try again.' });
     } finally {
       setIsSaving(false);

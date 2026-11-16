@@ -3,7 +3,7 @@ import { TextEncoder, TextDecoder } from 'util';
 
 // Polyfill for TextEncoder/TextDecoder
 global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder as any;
+global.TextDecoder = TextDecoder as unknown as typeof global.TextDecoder;
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {

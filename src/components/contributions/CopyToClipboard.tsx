@@ -6,8 +6,6 @@ import { Button } from '@/components/ui/Button';
 
 interface CopyToClipboardProps {
   text: string;
-  successMessage?: string;
-  errorMessage?: string;
   disabled?: boolean;
   ariaLabel?: string;
   className?: string;
@@ -16,8 +14,6 @@ interface CopyToClipboardProps {
 
 export function CopyToClipboard({
   text,
-  successMessage = 'Copied to clipboard!',
-  errorMessage = 'Failed to copy. Please try again.',
   disabled = false,
   ariaLabel = 'Copy to clipboard',
   className = '',

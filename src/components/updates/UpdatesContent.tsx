@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 
@@ -13,114 +14,8 @@ interface Update {
   author: string;
 }
 
-const mockUpdates: Update[] = [
-  {
-    id: '1',
-    title: 'Campaign Launch — We\'re Live!',
-    content: `Today marks the official launch of the One Human Initiative campaign. After months of preparation, we're finally ready to share this journey with you.
-
-**What this means:**
-- The campaign is now **active** and accepting contributions
-- All four contribution methods are live: Bitcoin, Solana, Phantom Username, and Ko-fi (pending approval)
-- The 30-day countdown has started
-- Our initial target is $10,000 with a maximum of $50,000
-
-**How you can help:**
-1. **Contribute** — Choose your preferred method and send support directly
-2. **Share** — Spread the word (privately, no tracking links)
-3. **Participate** — Join community governance via petitions and voting
-4. **Verify** — Check our transparency page for real-time updates
-
-**A note on privacy:** We don't track visitors, we don't require accounts, and we never share contributor information. Your generosity stays private.
-
-Thank you for being part of this from day one. Every contribution, regardless of size, makes a difference.
-
-— The One Human Initiative Team`,
-    publishedAt: '2024-01-15T09:00:00Z',
-    imageUrl: '/updates/launch.jpg',
-    author: 'Campaign Admin',
-  },
-  {
-    id: '2',
-    title: 'First Medical Expense Published',
-    content: `We're publishing our first verified expense today. The emergency surgery was completed successfully on January 14th.
-
-**Expense Details:**
-- **Category:** Medical
-- **Amount:** $5,000
-- **Date:** January 15, 2024
-- **Status:** Published with evidence
-
-The surgery addressed the immediate life-threatening condition. Recovery is underway, and follow-up appointments are scheduled.
-
-This expense represents 50% of our initial $10,000 target. We're grateful to the 47 contributors who have already helped reach this milestone.
-
-View the full transparency page for the evidence document (EXIF metadata stripped for privacy).`,
-    publishedAt: '2024-01-20T14:30:00Z',
-    author: 'Campaign Admin',
-  },
-  {
-    id: '3',
-    title: 'Community Petition: Target Increase to $35,000',
-    content: `A community petition has been submitted to increase the campaign target from $10,000 to $35,000.
-
-**Petition Summary:**
-- **Requested Target:** $35,000
-- **Reason:** Ongoing treatment, rehabilitation, and medication costs not covered by initial target
-- **Status:** Currently in voting phase
-- **Required:** 5 unique participation tokens to proceed
-
-The recipient's medical team has outlined a 6-month treatment plan including physical therapy, follow-up surgeries, and specialized medication. The current target only covers the emergency procedure.
-
-**How to participate:**
-1. Generate a participation token (bottom of this page)
-2. Vote Yes or No on the petition
-3. Results will be reviewed by admin if threshold is met
-
-Voting ends February 20, 2024. Admin will review and announce any decision publicly before implementing changes.`,
-    publishedAt: '2024-01-25T10:00:00Z',
-    author: 'Campaign Admin',
-  },
-  {
-    id: '4',
-    title: 'Phantom Wallet Tutorial Now Available',
-    content: `We've added an interactive Phantom Wallet tutorial to help newcomers contribute via Solana or Phantom Username.
-
-**Features:**
-- 10-step animated walkthrough
-- Covers wallet creation, funding, and sending transactions
-- Reduced motion support for accessibility
-- Mobile-responsive design
-- Security warnings about recovery phrases
-
-**Access:** Click the floating help button (bottom-right corner) or visit the Contribution Methods section on the homepage.
-
-This tutorial was built with custom CSS/SVG animations — no heavy libraries. It respects \`prefers-reduced-motion\` for users who prefer minimal animation.
-
-Special thanks to the community members who requested this resource!`,
-    publishedAt: '2024-02-01T16:00:00Z',
-    author: 'Campaign Admin',
-  },
-  {
-    id: '5',
-    title: 'Monthly Expense Report — January 2024',
-    content: `January expense summary is now available on the transparency page.
-
-**January Totals:**
-- **Medical:** $5,850 (emergency surgery + follow-ups)
-- **Living Expenses:** $2,700 (rent, utilities, groceries)
-- **Transportation:** $170 (medical transport)
-- **Total Published:** $8,720
-
-**Remaining Balance:** $17,030 (from $25,750 confirmed raised)
-
-All expenses are verified with evidence documents. The transparency page shows category breakdowns with progress bars.
-
-We aim to publish expenses within 48 hours of verification. If you have questions about any expense, please reach out through our contact channels.`,
-    publishedAt: '2024-02-01T09:00:00Z',
-    author: 'Campaign Admin',
-  },
-];
+// Empty state - data will be fetched from API
+const emptyUpdates: Update[] = [];
 
 export function UpdatesContent() {
   return (
@@ -138,7 +33,7 @@ export function UpdatesContent() {
 
       {/* Updates List */}
       <div className="max-w-3xl mx-auto space-y-6">
-        {mockUpdates.map((update) => (
+        {emptyUpdates.map((update) => (
           <article key={update.id} className="group">
             <Card variant="default" padding="lg" className="transition-shadow hover:shadow-lg">
               <CardHeader>
@@ -163,12 +58,14 @@ export function UpdatesContent() {
               </CardHeader>
 
               {update.imageUrl && (
-                <div className="mb-4 rounded-xl overflow-hidden">
-                  <img
+                <div className="mb-4 rounded-xl overflow-hidden relative h-48">
+                  <Image
                     src={update.imageUrl}
                     alt=""
-                    className="w-full h-48 object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority={false}
                   />
                 </div>
               )}
@@ -185,7 +82,7 @@ export function UpdatesContent() {
         ))}
 
         {/* Empty State */}
-        {mockUpdates.length === 0 && (
+        {emptyUpdates.length === 0 && (
           <Card variant="outlined" padding="lg" className="text-center">
             <CardContent>
               <svg className="mx-auto w-16 h-16 text-stone-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

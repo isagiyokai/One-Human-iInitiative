@@ -4,23 +4,23 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import type { CampaignStatus } from '@/lib/campaign';
 
 interface CountdownTimerProps {
   endDate: string;
   startDate?: string;
-  status: 'draft' | 'active' | 'paused' | 'target_reached' | 'expired' | 'completed';
+  status: CampaignStatus;
 }
 
 export function CountdownTimer({ endDate, startDate, status }: CountdownTimerProps) {
   const reducedMotion = useReducedMotion();
   const timeRemaining = useCountdown({
     endTimestamp: endDate,
-    status: status as any,
+    status,
     intervalMs: reducedMotion ? 60000 : 1000,
   });
 
   const { days, hours, minutes, seconds, isExpired, isStarted, isPaused } = timeRemaining;
-  const isActive = status === 'active' && !isExpired && isStarted;
   const isNotStarted = !isStarted;
 
   if (status === 'draft' || status === 'completed') {

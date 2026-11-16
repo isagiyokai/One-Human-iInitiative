@@ -270,6 +270,7 @@ function StatCard({
     <Card variant="default" padding="lg">
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between">
+          <h3 className="font-medium text-charcoal-900">{title}</h3>
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorClasses[color]}`}>
             {icon}
           </div>

@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { QRCodeComponent as QRCode } from '@/components/ui/QRCode';
 import { CopyToClipboard } from './CopyToClipboard';
-import { formatCurrency } from '@/lib/utils';
 
 interface ContributionMethod {
   id: string;
@@ -171,7 +170,6 @@ function ContributionMethodCard({ method }: { method: ContributionMethod }) {
             </code>
             <CopyToClipboard
               text={method.address}
-              successMessage={`${method.name} address copied!`}
               disabled={!method.enabled}
               aria-label={`Copy ${method.name} address`}
             />

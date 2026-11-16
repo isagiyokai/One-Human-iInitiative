@@ -14,7 +14,7 @@ export function TermsContent() {
           Terms & Conditions
         </h1>
         <p className="mt-4 text-lg text-stone-600 leading-relaxed">
-          Last updated: {lastUpdated} · Effective: {effectiveDate}
+          Last updated: {lastUpdated} &middot; Effective: {effectiveDate}
         </p>
       </header>
 
@@ -39,7 +39,7 @@ export function TermsContent() {
               <ul className="space-y-2 mt-4">
                 <li><strong>This is not a registered charity.</strong> Contributions are not tax-deductible.</li>
                 <li><strong>This is not an investment product.</strong> No financial returns, equity, or profit-sharing.</li>
-                <li><strong>No contractual obligation to repay.</strong> Any repayment is purely voluntary and at the recipient's discretion.</li>
+                <li><strong>No contractual obligation to repay.</strong> Any repayment is purely voluntary and at the recipient&apos;s discretion.</li>
                 <li><strong>No guaranteed outcome.</strong> Funds are used as described, but circumstances may change.</li>
                 <li><strong>Legal review recommended.</strong> Consult your own legal/tax advisor before contributing.</li>
               </ul>
@@ -86,14 +86,14 @@ export function TermsContent() {
             <CardContent className="prose prose-sm max-w-none text-stone-700 space-y-4">
               <p>
                 The campaign organizer and recipient have <strong>no legal obligation to repay</strong> any contributions.
-                The optional "repayment contact" feature (Ko-fi, Buy Me a Coffee) is provided solely as a convenience
+                The optional &ldquo;repayment contact&rdquo; feature (Ko-fi, Buy Me a Coffee) is provided solely as a convenience
                 for contributors who wish to leave a way for the recipient to optionally express gratitude in the future.
               </p>
               <p>
                 Any future repayment, gift, or acknowledgment is:
               </p>
               <ul>
-                <li>Entirely at the recipient's sole discretion</li>
+                <li>Entirely at the recipient&apos;s sole discretion</li>
                 <li>Not guaranteed, promised, or contractually required</li>
                 <li>Not enforceable by any contributor</li>
                 <li>Independent of these terms</li>
@@ -116,39 +116,42 @@ export function TermsContent() {
                 Contributions are intended to support the recipient with:
               </p>
               <ul>
-                <li>Medical expenses (surgery, treatment, medication, rehabilitation)</li>
-                <li>Essential living expenses (housing, utilities, food)</li>
-                <li>Transportation related to medical care</li>
-                <li>Other needs as determined by the recipient and disclosed in transparency reports</li>
+                <li>Housing costs (rent, security deposits, moving expenses)</li>
+                <li>Utilities and essential household expenses</li>
+                <li>Food, transportation, and daily living necessities</li>
+                <li>Related expenses as determined by the recipient</li>
               </ul>
               <p>
-                The campaign admin publishes verified expenses on the <a href="/transparency" className="text-earth-600 hover:underline">Transparency</a> page.
-                Fund allocation decisions are made by the recipient; the admin facilitates transparency.
+                The campaign target is <strong>$10,000 (minimum)</strong> with a maximum of <strong>$50,000</strong>.
+                If the target is reached, the community may petition to increase it (max $50,000).
+                Excess funds beyond the final target remain with the recipient.
               </p>
             </CardContent>
           </Card>
         </section>
 
-        {/* 4. Campaign Target & Duration */}
+        {/* 4. Target & Duration */}
         <section>
           <h2 className="text-2xl font-bold text-charcoal-900 mb-6 flex items-center gap-2">
             <span className="w-8 h-8 rounded-lg bg-charcoal-100 flex items-center justify-center text-charcoal-600">
               <span className="font-bold text-lg">4</span>
             </span>
-            Campaign Target & Duration
+            Target & Duration
           </h2>
           <Card variant="default" padding="lg">
             <CardContent className="prose prose-sm max-w-none text-stone-700 space-y-4">
+              <p>
+                The campaign runs for <strong>30 days</strong> from the start date.
+              </p>
               <ul>
-                <li><strong>Initial Target:</strong> $10,000 USD</li>
-                <li><strong>Maximum Target:</strong> $50,000 USD (hard cap, cannot be exceeded)</li>
-                <li><strong>Duration:</strong> 30 days from launch</li>
-                <li><strong>Target Increases:</strong> Require community petition (5 tokens) + voting + admin approval + public announcement</li>
-                <li><strong>Deadline:</strong> Never auto-extends. Campaign ends on the original end date or when target reached.</li>
+                <li><strong>Initial Target:</strong> $10,000</li>
+                <li><strong>Maximum Target:</strong> $50,000 (cannot exceed this limit)</li>
+                <li><strong>Duration:</strong> 30 calendar days</li>
+                <li><strong>No auto-extension:</strong> Deadline never automatically extends</li>
               </ul>
               <p>
-                Only <strong>confirmed contributions</strong> (manually verified on-chain by admin) count toward the target.
-                Pending/unverified contributions are not included in progress calculations.
+                If the target is reached before 30 days, the campaign status changes to &ldquo;Target Reached&rdquo;
+                and contributions are disabled. The community may petition for an increase (up to $50,000 max).
               </p>
             </CardContent>
           </Card>
@@ -165,17 +168,16 @@ export function TermsContent() {
           <Card variant="default" padding="lg">
             <CardContent className="prose prose-sm max-w-none text-stone-700 space-y-4">
               <p>
-                If confirmed contributions exceed the campaign target (up to the $50,000 maximum):
+                If contributions exceed the final target (after any community-approved increases):
               </p>
               <ul>
-                <li>All confirmed funds go to the recipient</li>
-                <li>Excess funds are not automatically refunded</li>
-                <li>Recipient may use excess for additional needs or future expenses</li>
-                <li>Transparency page will reflect total received vs. target</li>
+                <li>All confirmed contributions are delivered to the recipient</li>
+                <li>No automatic refunds or redistribution</li>
+                <li>Transparency page shows total raised vs. final target</li>
+                <li>Recipient may choose to donate excess elsewhere (not required)</li>
               </ul>
-              <p>
-                If the campaign expires without reaching the target, all confirmed funds still go to the recipient.
-                No refunds are issued for campaigns that don't reach their target.
+              <p className="font-semibold">
+                The $50,000 hard cap prevents unlimited accumulation.
               </p>
             </CardContent>
           </Card>
@@ -192,21 +194,22 @@ export function TermsContent() {
           <Card variant="default" padding="lg">
             <CardContent className="prose prose-sm max-w-none text-stone-700 space-y-4">
               <p>
-                Contributions are sent directly to blockchain addresses or payment platforms. We do not custody funds.
+                Contributions are subject to the terms, limitations, and risks of the underlying payment methods:
               </p>
               <ul>
-                <li><strong>Irreversibility:</strong> Blockchain transactions (Bitcoin, Solana) are generally irreversible. We cannot reverse or refund confirmed transactions.</li>
-                <li><strong>Network Fees:</strong> You are responsible for all network/miner fees. These are not part of the contribution amount.</li>
-                <li><strong>Confirmation Times:</strong> Verification depends on blockchain confirmations. May take minutes to hours.</li>
-                <li><strong>Platform Risks:</strong> Ko-fi (if enabled) has its own terms, fees, and dispute processes.</li>
-                <li><strong>Address Accuracy:</strong> Verify addresses before sending. We are not liable for funds sent to incorrect addresses.</li>
-                <li><strong>Technical Failures:</strong> Network congestion, forks, or platform outages may delay or prevent verification.</li>
+                <li><strong>Bitcoin/Solana:</strong> Transactions are irreversible once confirmed. Network fees apply. We cannot reverse or refund on-chain transactions.</li>
+                <li><strong>Phantom Wallet:</strong> Subject to Phantom&apos;s Terms of Service. Self-custody means you control your keys and bear all risk.</li>
+                <li><strong>Ko-fi:</strong> Subject to Ko-fi&apos;s Terms of Service (when enabled). Platform fees apply. Refunds/chargebacks processed per Ko-fi policy.</li>
               </ul>
+              <p>
+                We do not control blockchain networks or payment processors. Network congestion, fees, or technical issues
+                may delay or prevent contributions from being processed.
+              </p>
             </CardContent>
           </Card>
         </section>
 
-        {/* 7. Refund & Reversal Handling */}
+        {/* 7. Refunds & Reversals */}
         <section>
           <h2 className="text-2xl font-bold text-charcoal-900 mb-6 flex items-center gap-2">
             <span className="w-8 h-8 rounded-lg bg-charcoal-100 flex items-center justify-center text-charcoal-600">
@@ -223,7 +226,7 @@ export function TermsContent() {
                 If a contribution is <strong>rejected during verification</strong> (duplicate hash, incorrect amount, wrong network):
               </p>
               <ul>
-                <li>The contribution is marked as "rejected" and does not count toward the target</li>
+                <li>The contribution is marked as &ldquo;rejected&rdquo; and does not count toward the target</li>
                 <li>Funds remain at the destination address (we cannot retrieve them)</li>
                 <li>Contributor is notified of the rejection reason</li>
               </ul>
@@ -251,10 +254,10 @@ export function TermsContent() {
             <CardContent className="prose prose-sm max-w-none text-stone-700 space-y-4">
               <p>The campaign transitions through these states:</p>
               <ul>
-                <li><strong>Active → Target Reached:</strong> When confirmed ≥ target. Contributions disabled. Success message shown.</li>
-                <li><strong>Active → Expired:</strong> When 30-day period ends. Contributions disabled. Final totals displayed.</li>
-                <li><strong>Active → Paused:</strong> Admin action (with reason displayed). Can be resumed by admin.</li>
-                <li><strong>Target Reached/Expired/Paused → Completed:</strong> Admin finalizes. No further changes possible.</li>
+                <li><strong>Active &rarr; Target Reached:</strong> When confirmed &ge; target. Contributions disabled. Success message shown.</li>
+                <li><strong>Active &rarr; Expired:</strong> When 30-day period ends. Contributions disabled. Final totals displayed.</li>
+                <li><strong>Active &rarr; Paused:</strong> Admin action (with reason displayed). Can be resumed by admin.</li>
+                <li><strong>Target Reached/Expired/Paused &rarr; Completed:</strong> Admin finalizes. No further changes possible.</li>
               </ul>
               <p>
                 Upon completion, the homepage shows final totals, contribution methods are hidden,
@@ -298,37 +301,40 @@ export function TermsContent() {
             <CardContent className="prose prose-sm max-w-none text-stone-700 space-y-4">
               <p>
                 This campaign is <strong>not an investment, security, or financial product</strong>.
-                There is no expectation of profit, return on investment, dividends, interest, equity, tokens,
-                or any financial benefit from contributing.
+                No equity, tokens, profit-sharing, or returns of any kind are offered or implied.
               </p>
               <p>
-                Contributions are personal gifts/support. Any future interaction with the recipient is
-                purely personal and voluntary, not contractual.
+                If you are contributing with expectation of financial gain, you are misunderstanding the nature of this campaign.
+                Please do not contribute if you view this as an investment opportunity.
               </p>
             </CardContent>
           </Card>
         </section>
 
-        {/* 11. Dispute Resolution */}
+        {/* 11. Legal Review Flag */}
         <section>
           <h2 className="text-2xl font-bold text-charcoal-900 mb-6 flex items-center gap-2">
             <span className="w-8 h-8 rounded-lg bg-charcoal-100 flex items-center justify-center text-charcoal-600">
               <span className="font-bold text-lg">11</span>
             </span>
-            Dispute Resolution
+            Legal Review Flag
           </h2>
-          <Card variant="default" padding="lg">
-            <CardContent className="prose prose-sm max-w-none text-stone-700 space-y-4">
+          <Card variant="outlined" padding="lg" className="border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="text-amber-800 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Legal Review Recommended
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="prose prose-sm max-w-none text-amber-900">
               <p>
-                Any disputes arising from these terms or the campaign shall be resolved through:
+                These terms have not been reviewed by a qualified attorney in all applicable jurisdictions.
+                Laws regarding crowdfunding, gifts, and online payments vary by country and state.
               </p>
-              <ol>
-                <li>Good-faith direct communication via privacy@onehumaninitiative.org</li>
-                <li>If unresolved, binding arbitration in [JURISDICTION TO BE DETERMINED — LEGAL REVIEW REQUIRED]</li>
-                <li>Governing law: [JURISDICTION TO BE DETERMINED — LEGAL REVIEW REQUIRED]</li>
-              </ol>
-              <p className="font-semibold text-red-700">
-                ⚠️ JURISDICTION AND GOVERNING LAW REQUIRE LEGAL REVIEW BEFORE LAUNCH
+              <p className="font-semibold">
+                We strongly recommend consulting your own legal advisor before contributing or relying on these terms.
               </p>
             </CardContent>
           </Card>
@@ -350,7 +356,7 @@ export function TermsContent() {
               <ul>
                 <li>We are not liable for any indirect, incidental, special, consequential, or punitive damages</li>
                 <li>We are not liable for blockchain network issues, payment processor failures, or technical errors</li>
-                <li>We are not liable for the recipient's use of funds or personal circumstances</li>
+                <li>We are not liable for the recipient&apos;s use of funds or personal circumstances</li>
                 <li>Our total liability shall not exceed the amount you contributed</li>
                 <li>You contribute at your own risk</li>
               </ul>
@@ -370,7 +376,7 @@ export function TermsContent() {
             <CardContent className="prose prose-sm max-w-none text-stone-700 space-y-4">
               <p>
                 We may update these terms to reflect changes in the campaign, legal requirements, or platform capabilities.
-                The "Last updated" date will be revised. Material changes will be announced on the
+                The &ldquo;Last updated&rdquo; date will be revised. Material changes will be announced on the
                 <a href="/updates" className="text-earth-600 hover:underline">Updates</a> page.
               </p>
               <p>
@@ -417,23 +423,6 @@ export function TermsContent() {
                 <li><strong>Email:</strong> terms@onehumaninitiative.org</li>
                 <li><strong>Response Time:</strong> Within 14 business days</li>
               </ul>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Legal Review Flag */}
-        <section>
-          <Card variant="outlined" padding="lg" className="border-red-200 bg-red-50">
-            <CardContent className="text-center">
-              <svg className="mx-auto w-12 h-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <h3 className="text-lg font-semibold text-red-800 mb-2">Legal Review Required</h3>
-              <p className="text-red-700">
-                These terms contain placeholders for jurisdiction and governing law (marked with ⚠️).
-                A qualified attorney must review and finalize these terms before campaign launch.
-                Do not launch without legal review.
-              </p>
             </CardContent>
           </Card>
         </section>

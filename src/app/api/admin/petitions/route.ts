@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const petitionActionSchema = z.object({
   petitionId: z.string().uuid(),
   action: z.enum(['approve', 'reject', 'cancel']),
@@ -88,7 +90,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Petition not found' }, { status: 404 });
     }
 
-    let updateData: Record<string, unknown> = {
+    const updateData: Record<string, unknown> = {
       admin_notes: adminNotes || null,
       decided_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

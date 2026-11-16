@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
@@ -158,7 +158,7 @@ export function AdminExpenses() {
       setMessage({ type: 'success', text: 'Expense updated successfully!' });
       setEditingId(null);
       setFormData({});
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Failed to save. Please try again.' });
     } finally {
       setIsSaving(false);
@@ -219,7 +219,7 @@ export function AdminExpenses() {
           />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'draft' | 'published')}
             className="w-full sm:w-48 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-charcoal-500"
           >
             <option value="all">All Statuses</option>

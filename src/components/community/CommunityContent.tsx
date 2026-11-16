@@ -24,31 +24,11 @@ interface Petition {
   implementedAt?: string;
 }
 
-interface Vote {
-  petitionId: string;
-  choice: 'yes' | 'no';
-  timestamp: string;
-}
-
-const mockPetition: Petition = {
-  id: '1',
-  title: 'Increase Campaign Target to $35,000',
-  description:
-    'Due to unexpected medical complications, the recipient needs additional support for ongoing treatment and rehabilitation. The current $10,000 target covers only emergency surgery. An increase to $35,000 would cover 6 months of follow-up care, physical therapy, and medication.',
-  requestedTarget: 35000,
-  currentTarget: 10000,
-  status: 'voting',
-  yesVotes: 7,
-  noVotes: 2,
-  requiredTokens: 5,
-  createdAt: '2024-01-20T10:00:00Z',
-  endsAt: '2024-02-20T10:00:00Z',
-};
-
-const mockVotes: Vote[] = [];
+// Empty state - data will be fetched from API
+const emptyPetition: Petition | null = null;
 
 export function CommunityContent() {
-  const { token, isLoading, generateToken, hasVoted } = useBrowserToken();
+  const { token, generateToken, hasVoted } = useBrowserToken();
   const [showCreatePetition, setShowCreatePetition] = React.useState(false);
   const [petitionForm, setPetitionForm] = React.useState({
     title: '',
@@ -57,13 +37,13 @@ export function CommunityContent() {
   });
   const [userVote, setUserVote] = React.useState<'yes' | 'no' | null>(null);
 
-  const petition = mockPetition;
-  const totalVotes = petition.yesVotes + petition.noVotes;
-  const yesPercentage = totalVotes > 0 ? (petition.yesVotes / totalVotes) * 100 : 0;
-  const noPercentage = totalVotes > 0 ? (petition.noVotes / totalVotes) * 100 : 0;
+  const petition = emptyPetition;
+  const totalVotes = petition ? petition.yesVotes + petition.noVotes : 0;
+  const yesPercentage = totalVotes > 0 && petition ? (petition.yesVotes / totalVotes) * 100 : 0;
+  const noPercentage = totalVotes > 0 && petition ? (petition.noVotes / totalVotes) * 100 : 0;
 
   const handleVote = (choice: 'yes' | 'no') => {
-    if (!token) {
+    if (!token || !petition) {
       generateToken();
       return;
     }
@@ -96,7 +76,8 @@ export function CommunityContent() {
     }
 
     const target = parseInt(petitionForm.requestedTarget, 10);
-    if (isNaN(target) || target <= petition.currentTarget || target > 50000) {
+    const currentTarget = petition?.currentTarget ?? 10000;
+    if (isNaN(target) || target <= currentTarget || target > 50000) {
       alert('Target must be greater than current target and not exceed $50,000');
       return;
     }
@@ -115,7 +96,9 @@ export function CommunityContent() {
     implemented: { label: 'Implemented', variant: 'default' as const, color: 'text-charcoal-600' },
   };
 
-  const { label: statusLabel, variant: statusVariant, color: statusColor } = statusConfig[petition.status];
+  const { label: statusLabel, variant: statusVariant, color: statusColor } = petition
+    ? statusConfig[petition.status]
+    : { label: '', variant: 'default' as const, color: '' };
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
@@ -332,7 +315,7 @@ export function CommunityContent() {
                 <form onSubmit={handleCreatePetition} className="space-y-4">
                   <Input
                     label="Petition Title"
-                    placeholder="e.g., Increase target for additional medical expenses"
+                    placeholder="e.g., Increase target for additional housing costs"
                     value={petitionForm.title}
                     onChange={(e) => setPetitionForm({ ...petitionForm, title: e.target.value })}
                     required
@@ -354,9 +337,9 @@ export function CommunityContent() {
                     value={petitionForm.requestedTarget}
                     onChange={(e) => setPetitionForm({ ...petitionForm, requestedTarget: e.target.value })}
                     required
-                    min={petition.currentTarget + 1}
+                    min={petition ? petition.currentTarget + 1 : 10001}
                     max={50000}
-                    hint={`Must be between $${petition.currentTarget + 1} and $50,000`}
+                    hint={`Must be between $${petition ? petition.currentTarget + 1 : 10001} and $50,000`}
                   />
                   <Button type="submit" className="w-full">
                     Submit Petition
@@ -406,7 +389,7 @@ export function CommunityContent() {
               <div className="pt-4 border-t border-stone-200">
                 <p className="text-xs text-stone-500">
                   <strong>Note:</strong> Browser tokens are stored locally and hashed on the server.
-                  This is not one-person-one-vote — it's browser-bound participation.
+                  This is not one-person-one-vote &mdash; it&apos;s browser-bound participation.
                   Users can clear tokens by clearing browser data.
                 </p>
               </div>

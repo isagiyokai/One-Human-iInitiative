@@ -9,6 +9,8 @@ import {
 } from '@/lib/validators';
 import { validateBitcoinAddress, validateSolanaAddress } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -175,24 +177,42 @@ export async function GET() {
       .single();
 
     if (!campaign) {
-      return NextResponse.json({ contributions: [] });
+      return NextResponse.json({
+        aggregates: { byCurrency: [] },
+        totalConfirmedCount: 0,
+        totalUsdValue: 0
+      });
     }
 
-    // Get confirmed contributions (public view)
-    const { data: contributions, error } = await supabase
-      .from('contributions')
-      .select('id, payment_method, amount, currency, confirmed_at')
-      .eq('campaign_id', campaign.id)
-      .eq('status', 'confirmed')
-      .order('confirmed_at', { ascending: false });
+    // Get contribution aggregates from secure view (NO individual contributions exposed)
+    const { data: aggregates, error } = await supabase
+      .from('contribution_aggregates_public')
+      .select('currency, contribution_count, total_amount, total_usd_value, first_contribution_at, last_contribution_at')
+      .eq('campaign_id', campaign.id);
 
     if (error) {
-      return NextResponse.json({ contributions: [] });
+      return NextResponse.json({
+        aggregates: { byCurrency: [] },
+        totalConfirmedCount: 0,
+        totalUsdValue: 0
+      });
     }
 
-    return NextResponse.json({ contributions: contributions || [] });
+    const byCurrency = aggregates || [];
+    const totalConfirmedCount = byCurrency.reduce((sum, c) => sum + c.contribution_count, 0);
+    const totalUsdValue = byCurrency.reduce((sum, c) => sum + Number(c.total_usd_value || 0), 0);
+
+    return NextResponse.json({
+      aggregates: { byCurrency },
+      totalConfirmedCount,
+      totalUsdValue
+    });
   } catch (error) {
     console.error('Contribution GET error:', error);
-    return NextResponse.json({ contributions: [] });
+    return NextResponse.json({
+      aggregates: { byCurrency: [] },
+      totalConfirmedCount: 0,
+      totalUsdValue: 0
+    });
   }
 }

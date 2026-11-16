@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
-import { campaignSchema, campaignSettingsSchema } from '@/lib/validators';
+import { campaignSchema } from '@/lib/validators';
 import { validateTargetIncrease } from '@/lib/campaign';
 import { z } from 'zod';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
