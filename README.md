@@ -20,7 +20,7 @@ The One Human Initiative is a 30-day campaign to raise $10,000-$50,000 in direct
 
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS 4
+- **Styling**: Tailwind CSS 3.4
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth (Email/Password + MFA)
 - **Validation**: Zod
