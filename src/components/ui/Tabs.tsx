@@ -56,8 +56,8 @@ export function TabsTrigger({ value, className = '', children, ...props }: TabsT
       tabIndex={isActive ? 0 : -1}
       onClick={() => onValueChange(value)}
       className={`
-        px-4 py-3 text-sm font-medium border-b-2 transition-colors
-        focus:outline-none focus:ring-2 focus:ring-charcoal-500 focus:ring-offset-2
+        px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 ease-out
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-charcoal-500 focus-visible:ring-offset-2
         ${isActive
           ? 'border-charcoal-900 text-charcoal-900'
           : 'border-transparent text-stone-500 hover:text-charcoal-700 hover:border-stone-300'
@@ -92,7 +92,7 @@ export function TabsContent({ value, className = '', children, ...props }: TabsC
       role="tabpanel"
       id={`tabs-panel-${value}`}
       aria-labelledby={`tabs-trigger-${value}`}
-      className={className}
+      className={cn('animate-fade-in', className)}
       {...props}
     >
       {children}
@@ -118,3 +118,5 @@ export function TabsProvider({ value, onValueChange, children }: {
     </TabsContext.Provider>
   );
 }
+
+import { cn } from '@/lib/utils';

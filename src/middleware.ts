@@ -1,63 +1,43 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const SESSION_COOKIE_NAME = 'admin_session';
+
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  // Check for admin session cookie
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
+  let isAuthenticated = false;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(
-        cookiesToSet: Array<{ name: string; value: string; options?: { [key: string]: unknown } }>
-      ) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
+  if (sessionCookie?.value) {
+    try {
+      const session = JSON.parse(Buffer.from(sessionCookie.value, 'base64').toString());
+      if (session.expiresAt > Date.now()) {
+        isAuthenticated = true;
+      }
+    } catch {
+      // Invalid session cookie
     }
-  );
-
-  // Refresh session if expired - required for Server Components
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  }
 
   // Protect admin routes
   if (request.nextUrl.pathname.startsWith('/admin')) {
     if (request.nextUrl.pathname === '/admin/login') {
       // Allow access to login page
-      if (user) {
+      if (isAuthenticated) {
         // Redirect authenticated users to dashboard
         return NextResponse.redirect(new URL('/admin', request.url));
       }
-      return supabaseResponse;
+      return NextResponse.next();
     }
 
     // Require authentication for all other admin routes
-    if (!user) {
+    if (!isAuthenticated) {
       const redirectUrl = new URL('/admin/login', request.url);
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
-
-    // Check for admin role (could be extended with custom claims)
-    // For now, any authenticated user can access admin
-    // In production, you'd check user.role === 'admin' or similar
   }
 
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {

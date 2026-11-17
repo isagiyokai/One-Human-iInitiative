@@ -30,7 +30,11 @@ export function Badge({
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full border ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`
+        inline-flex items-center font-medium rounded-full border
+        transition-colors duration-200 ease-out
+        ${variantStyles[variant]} ${sizeStyles[size]} ${className}
+      `}
       {...props}
     >
       {children}

@@ -5,11 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
-import { createBrowserClient } from '@supabase/ssr';
 
 interface AdminSidebarProps {
   navigation: Array<{ name: string; href: string; icon: string }>;
-  user: { email?: string; id: string };
+  username: string;
 }
 
 const icons: Record<string, React.ReactNode> = {
@@ -66,17 +65,17 @@ const icons: Record<string, React.ReactNode> = {
   ),
 };
 
-export function AdminSidebar({ navigation, user }: AdminSidebarProps) {
+export function AdminSidebar({ navigation, username }: AdminSidebarProps) {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
 
   const handleSignOut = async () => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    await supabase.auth.signOut();
-    window.location.href = '/admin/login';
+    try {
+      await fetch('/api/admin/auth', { method: 'DELETE' });
+      window.location.href = '/admin/login';
+    } catch {
+      window.location.href = '/admin/login';
+    }
   };
 
   return (
@@ -147,7 +146,7 @@ export function AdminSidebar({ navigation, user }: AdminSidebarProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-charcoal-900 truncate">
-                  {user.email || 'Admin User'}
+                  {username}
                 </p>
                 <p className="text-xs text-stone-500">Administrator</p>
               </div>

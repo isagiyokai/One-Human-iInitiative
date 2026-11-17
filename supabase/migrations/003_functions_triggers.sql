@@ -86,24 +86,28 @@ RETURNS TRIGGER AS $$
 DECLARE
     v_campaign campaigns%ROWTYPE;
     v_new_status VARCHAR;
+    v_usd_value DECIMAL(18, 2);
 BEGIN
     -- Only act on status change TO confirmed
     IF NEW.status = 'confirmed' AND OLD.status = 'pending' THEN
         -- Get campaign
         SELECT * INTO v_campaign FROM campaigns WHERE id = NEW.campaign_id;
 
+        -- Use USD value for campaign totals (fallback to amount if usd_value not set)
+        v_usd_value := COALESCE(NEW.usd_value, NEW.amount);
+
         -- Compute new status
         v_new_status := compute_campaign_status(
             v_campaign.status,
             v_campaign.start_date,
             v_campaign.end_date,
-            v_campaign.confirmed_amount + NEW.amount,
+            v_campaign.confirmed_amount + v_usd_value,
             v_campaign.target
         );
 
         -- Update campaign
         UPDATE campaigns SET
-            confirmed_amount = confirmed_amount + NEW.amount,
+            confirmed_amount = confirmed_amount + v_usd_value,
             confirmed_count = confirmed_count + 1,
             status = v_new_status,
             updated_at = NOW()

@@ -43,11 +43,11 @@ export function AdminOverview() {
   const percentage = stats.target > 0 ? Math.min((stats.totalRaised / stats.target) * 100, 100) : 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-charcoal-900">Dashboard</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal-900">Dashboard</h1>
           <p className="mt-1 text-stone-600">Campaign overview and quick actions</p>
         </div>
         <div className="flex items-center gap-3">
@@ -64,7 +64,7 @@ export function AdminOverview() {
           value={formatCurrency(stats.totalRaised)}
           description={`Target: ${formatCurrency(stats.target)}`}
           icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           }
@@ -76,7 +76,7 @@ export function AdminOverview() {
           value={formatNumber(stats.pendingContributions)}
           description="Awaiting admin review"
           icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           }
@@ -88,7 +88,7 @@ export function AdminOverview() {
           value={formatCurrency(stats.totalExpenses)}
           description={`${((stats.totalExpenses / stats.totalRaised) * 100).toFixed(1)}% of funds`}
           icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           }
@@ -100,7 +100,7 @@ export function AdminOverview() {
           value={stats.daysRemaining.toString()}
           description="Campaign expires in"
           icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           }
@@ -112,7 +112,7 @@ export function AdminOverview() {
       {/* Progress & Quick Actions */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Campaign Progress */}
-        <Card variant="default" padding="lg">
+        <Card variant="default" padding="lg" className="hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Campaign Progress
@@ -121,7 +121,7 @@ export function AdminOverview() {
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <Progress
               value={stats.totalRaised}
               max={stats.target}
@@ -130,29 +130,29 @@ export function AdminOverview() {
               size="lg"
               variant={percentage >= 100 ? 'success' : 'default'}
             />
-            <div className="grid gap-4 sm:grid-cols-3 text-center">
-              <div className="p-3 rounded-lg bg-stone-50">
-                <div className="text-2xl font-bold text-charcoal-900">{formatNumber(stats.contributorCount)}</div>
-                <div className="text-xs text-stone-500">Contributors</div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="p-4 rounded-xl bg-stone-50 text-center">
+                <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{formatNumber(stats.contributorCount)}</div>
+                <div className="text-xs text-stone-500 mt-1">Contributors</div>
               </div>
-              <div className="p-3 rounded-lg bg-stone-50">
-                <div className="text-2xl font-bold text-charcoal-900">{formatCurrency(stats.target - stats.totalRaised)}</div>
-                <div className="text-xs text-stone-500">To Target</div>
+              <div className="p-4 rounded-xl bg-stone-50 text-center">
+                <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{formatCurrency(stats.target - stats.totalRaised)}</div>
+                <div className="text-xs text-stone-500 mt-1">To Target</div>
               </div>
-              <div className="p-3 rounded-lg bg-stone-50">
-                <div className="text-2xl font-bold text-charcoal-900">{formatCurrency(stats.totalRaised - stats.totalExpenses)}</div>
-                <div className="text-xs text-stone-500">Available</div>
+              <div className="p-4 rounded-xl bg-stone-50 text-center">
+                <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{formatCurrency(stats.totalRaised - stats.totalExpenses)}</div>
+                <div className="text-xs text-stone-500 mt-1">Available</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Quick Actions */}
-        <Card variant="default" padding="lg">
+        <Card variant="default" padding="lg" className="hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="text-lg">Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             <QuickActionLink
               href="/admin/contributions"
               icon={
@@ -183,7 +183,7 @@ export function AdminOverview() {
                 </svg>
               }
               title="Review Petitions"
-              description={`${stats.activePetitions} active petition(s}`}
+              description={`${stats.activePetitions} active petition(s)`}
               badge={stats.activePetitions > 0 ? stats.activePetitions.toString() : undefined}
               badgeVariant="info"
             />
@@ -222,12 +222,12 @@ export function AdminOverview() {
       </div>
 
       {/* Recent Activity */}
-      <Card variant="default" padding="lg">
+      <Card variant="default" padding="lg" className="hover:shadow-lg transition-shadow duration-300">
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle className="text-lg">Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[
               { action: 'Contribution verified', detail: 'BTC transaction abc123... confirmed', time: '2 hours ago', type: 'success' as const },
               { action: 'Expense published', detail: 'Medical: Follow-up appointment - $850', time: '5 hours ago', type: 'info' as const },
@@ -267,15 +267,15 @@ function StatCard({
   };
 
   return (
-    <Card variant="default" padding="lg">
+    <Card variant="default" padding="lg" className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ease-out" hover>
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-medium text-charcoal-900">{title}</h3>
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorClasses[color]}`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClasses[color]}`}>
             {icon}
           </div>
         </div>
-        <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{value}</div>
+        <div className="text-3xl sm:text-4xl font-bold text-charcoal-900 tabular-nums">{value}</div>
         <div className="text-sm text-stone-500">{description}</div>
         <div className="text-xs text-stone-400">{trend}</div>
       </CardContent>
@@ -301,9 +301,9 @@ function QuickActionLink({
   return (
     <a
       href={href}
-      className="flex items-center gap-4 p-3 rounded-lg hover:bg-stone-50 transition-colors"
+      className="flex items-center gap-4 p-3 rounded-xl hover:bg-stone-50 transition-colors"
     >
-      <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600">
+      <div className="w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center text-stone-600">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -367,7 +367,7 @@ function ActivityRow({
   };
 
   return (
-    <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-stone-50 transition-colors">
+    <div className="flex items-start gap-4 p-3 rounded-xl hover:bg-stone-50 transition-colors">
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${typeColors[type]}`}>
         {icons[type]}
       </div>

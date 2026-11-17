@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminClient } from '@/lib/supabase/admin';
-import { createClient } from '@/lib/supabase/server';
+import { verifyAdminApiAuth } from '@/lib/admin-api-auth';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -34,12 +34,9 @@ async function fetchExchangeRate(currency: string): Promise<{ rate: number; sour
 
 export async function GET(request: Request) {
   try {
-    // Check admin auth
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authError = await verifyAdminApiAuth();
+    if (authError) {
+      return NextResponse.json({ error: authError.error }, { status: authError.status });
     }
 
     const admin = getAdminClient();
@@ -75,12 +72,9 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    // Check admin auth
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authError = await verifyAdminApiAuth();
+    if (authError) {
+      return NextResponse.json({ error: authError.error }, { status: authError.status });
     }
 
     const body = await request.json();

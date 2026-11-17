@@ -1,6 +1,15 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+// Type for Supabase client with auth.getUser()
+export type SupabaseAuthClient = {
+  auth: {
+    getUser: () => Promise<{
+      data: { user: { email?: string | null } | null };
+    }>;
+  };
+};
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -138,4 +147,24 @@ export function isValidUrl(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+// Admin verification - checks if user email is in admin list
+export function isAdminUser(email: string | undefined | null): boolean {
+  if (!email) return false;
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+  return adminEmails.includes(email.toLowerCase());
+}
+
+// Server-side admin verification (for use in API routes)
+export async function verifyAdminAccess(supabase: SupabaseAuthClient): Promise<{ user: { email?: string | null }; isAdmin: boolean } | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const isAdmin = isAdminUser(user.email);
+
+  return { user, isAdmin };
 }

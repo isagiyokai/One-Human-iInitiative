@@ -26,7 +26,7 @@ const progressStyles = {
     warning: 'bg-amber-500',
     error: 'bg-red-500',
   },
-  animated: 'animate-pulse',
+  animated: 'animate-pulse-subtle',
 };
 
 export const Progress = forwardRef<HTMLDivElement, ProgressProps>(
@@ -49,9 +49,9 @@ export const Progress = forwardRef<HTMLDivElement, ProgressProps>(
     return (
       <div ref={ref} className={cn('w-full', className)} {...props}>
         {(showLabel || label) && (
-          <div className="flex justify-between text-sm text-charcoal-600 mb-1.5">
+          <div className="flex justify-between text-sm font-medium text-charcoal-600 mb-1.5">
             <span>{label || 'Progress'}</span>
-            <span>{percentage.toFixed(0)}%</span>
+            <span aria-hidden="true">{percentage.toFixed(0)}%</span>
           </div>
         )}
         <div
@@ -61,7 +61,7 @@ export const Progress = forwardRef<HTMLDivElement, ProgressProps>(
             className
           )}
           role="progressbar"
-          aria-valuenow={value}
+          aria-valuenow={Math.round(value)}
           aria-valuemin={0}
           aria-valuemax={max}
           aria-label={label || 'Progress'}
@@ -73,6 +73,7 @@ export const Progress = forwardRef<HTMLDivElement, ProgressProps>(
               animated && progressStyles.animated
             )}
             style={{ width: `${percentage}%` }}
+            aria-hidden="true"
           />
         </div>
       </div>

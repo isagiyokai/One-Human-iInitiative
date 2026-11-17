@@ -36,22 +36,22 @@ export function CampaignExplanation({
     '6. 100% of confirmed funds go to the recipient';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-10">
       <header className="text-center max-w-2xl mx-auto">
-        <h2 id="explanation-heading" className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal-900">
+        <h2 id="explanation-heading" className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tighter text-charcoal-900 leading-[1.1] text-balance">
           {title}
         </h2>
-        <p className="mt-4 text-lg text-stone-600 leading-relaxed">
+        <p className="mt-5 text-lg sm:text-xl text-stone-600 leading-relaxed">
           {description || defaultDescription}
         </p>
       </header>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* The Story */}
-        <Card variant="default" padding="lg">
+        <Card variant="default" padding="lg" className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ease-out" hover>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-earth-100 flex items-center justify-center text-earth-600">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <span className="w-10 h-10 rounded-xl bg-earth-100 flex items-center justify-center text-earth-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
@@ -61,17 +61,17 @@ export function CampaignExplanation({
             <CardDescription>The person behind the campaign</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-stone-600 leading-relaxed">
+            <p className="text-stone-600 leading-relaxed text-base">
               {story || defaultStory}
             </p>
           </CardContent>
         </Card>
 
         {/* Why Anonymous */}
-        <Card variant="default" padding="lg">
+        <Card variant="default" padding="lg" className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ease-out" hover>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-charcoal-100 flex items-center justify-center text-charcoal-600">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <span className="w-10 h-10 rounded-xl bg-charcoal-100 flex items-center justify-center text-charcoal-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
@@ -81,17 +81,17 @@ export function CampaignExplanation({
             <CardDescription>Anonymity protects everyone</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-stone-600 leading-relaxed">
+            <p className="text-stone-600 leading-relaxed text-base">
               {whyAnonymous || defaultWhyAnonymous}
             </p>
           </CardContent>
         </Card>
 
         {/* How It Works */}
-        <Card variant="default" padding="lg">
+        <Card variant="default" padding="lg" className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ease-out" hover>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <span className="w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center text-stone-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
@@ -101,23 +101,30 @@ export function CampaignExplanation({
             <CardDescription>Simple, direct, transparent</CardDescription>
           </CardHeader>
           <CardContent>
-            <pre className="text-sm text-stone-600 leading-relaxed font-sans whitespace-pre-wrap">
-              {howItWorks || defaultHowItWorks}
-            </pre>
+            <div className="space-y-3 text-stone-600 leading-relaxed text-sm">
+              {(howItWorks || defaultHowItWorks).split('\n').map((step, index) => (
+                <div key={index} className="flex gap-3 items-start">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-earth-100 text-earth-600 text-xs font-medium flex items-center justify-center">
+                    {index + 1}
+                  </span>
+                  <span className="pt-0.5">{step}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Key Principles */}
-      <section className="border-t border-stone-200 pt-8" aria-labelledby="principles-heading">
-        <h3 id="principles-heading" className="text-2xl font-bold text-charcoal-900 text-center mb-8">
+      <section className="border-t border-stone-200 pt-10 animate-slide-up" aria-labelledby="principles-heading">
+        <h3 id="principles-heading" className="text-2xl sm:text-3xl font-bold text-charcoal-900 text-center mb-8">
           Core Principles
         </h3>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[
             {
               icon: (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               ),
@@ -126,7 +133,7 @@ export function CampaignExplanation({
             },
             {
               icon: (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               ),
@@ -135,7 +142,7 @@ export function CampaignExplanation({
             },
             {
               icon: (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               ),
@@ -144,7 +151,7 @@ export function CampaignExplanation({
             },
             {
               icon: (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               ),
@@ -152,12 +159,12 @@ export function CampaignExplanation({
               description: 'Target increases require community petition and voting. Power stays with contributors.'
             },
           ].map((principle, index) => (
-            <Card key={index} variant="outlined" padding="md" className="text-center">
+            <Card key={index} variant="outlined" padding="md" className="text-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ease-out border-stone-200" hover>
               <div className="mx-auto w-12 h-12 rounded-xl bg-earth-100 flex items-center justify-center text-earth-600 mb-4">
                 {principle.icon}
               </div>
               <h4 className="font-semibold text-charcoal-900 mb-2">{principle.title}</h4>
-              <p className="text-sm text-stone-600">{principle.description}</p>
+              <p className="text-sm text-stone-600 leading-relaxed">{principle.description}</p>
             </Card>
           ))}
         </div>

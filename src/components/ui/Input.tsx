@@ -30,17 +30,20 @@ export function Input({
         className={`
           w-full rounded-lg border bg-white px-4 py-2.5 text-charcoal-900
           placeholder:text-stone-400
-          focus:outline-none focus:ring-2 focus:ring-offset-0
-          transition-colors duration-200
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0
+          transition-all duration-200 ease-out
           ${error
-            ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-            : 'border-stone-300 focus:ring-charcoal-500 focus:border-charcoal-500'
+            ? 'border-red-300 focus-visible:ring-red-500 focus-visible:border-red-500'
+            : 'border-stone-300 focus-visible:ring-charcoal-500 focus-visible:border-charcoal-500'
           }
           disabled:bg-stone-50 disabled:text-stone-500 disabled:cursor-not-allowed
+          hover:border-stone-400
+          text-base sm:text-sm
           ${className}
         `}
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
+        autoComplete={props.autoComplete || 'off'}
         {...props}
       />
       {error && (
@@ -85,13 +88,15 @@ export function Textarea({
         className={`
           w-full rounded-lg border bg-white px-4 py-2.5 text-charcoal-900
           placeholder:text-stone-400 resize-y min-h-[100px]
-          focus:outline-none focus:ring-2 focus:ring-offset-0
-          transition-colors duration-200
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0
+          transition-all duration-200 ease-out
           ${error
-            ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-            : 'border-stone-300 focus:ring-charcoal-500 focus:border-charcoal-500'
+            ? 'border-red-300 focus-visible:ring-red-500 focus-visible:border-red-500'
+            : 'border-stone-300 focus-visible:ring-charcoal-500 focus-visible:border-charcoal-500'
           }
           disabled:bg-stone-50 disabled:text-stone-500 disabled:cursor-not-allowed
+          hover:border-stone-400
+          text-base sm:text-sm
           ${className}
         `}
         aria-invalid={error ? 'true' : 'false'}

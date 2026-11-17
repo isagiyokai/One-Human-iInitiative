@@ -15,7 +15,7 @@ const paymentMethods = [
       </svg>
     ),
     fields: [
-      { name: 'bitcoinAddress', label: 'Bitcoin Address', type: 'text', placeholder: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', required: true },
+      { name: 'bitcoinAddress', label: 'Bitcoin Address', type: 'text', placeholder: 'bc1...', required: true },
     ],
   },
   {
@@ -27,7 +27,7 @@ const paymentMethods = [
       </svg>
     ),
     fields: [
-      { name: 'solanaAddress', label: 'Solana Address', type: 'text', placeholder: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAtU', required: true },
+      { name: 'solanaAddress', label: 'Solana Address', type: 'text', placeholder: '7xKX...', required: true },
     ],
   },
   {
@@ -39,7 +39,7 @@ const paymentMethods = [
       </svg>
     ),
     fields: [
-      { name: 'phantomUsername', label: 'Phantom Username', type: 'text', placeholder: '@onehumaninitiative', required: true },
+      { name: 'phantomUsername', label: 'Phantom Username', type: 'text', placeholder: '@username', required: true },
     ],
   },
   {
@@ -52,7 +52,7 @@ const paymentMethods = [
     ),
     fields: [
       { name: 'kofiEnabled', label: 'Enable Ko-fi', type: 'checkbox' },
-      { name: 'kofiUrl', label: 'Ko-fi URL', type: 'url', placeholder: 'https://ko-fi.com/onehumaninitiative', required: false },
+      { name: 'kofiUrl', label: 'Ko-fi URL', type: 'url', placeholder: 'https://ko-fi.com/username', required: false },
       { name: 'kofiLabel', label: 'Button Label', type: 'text', placeholder: 'Support on Ko-fi', required: false },
       { name: 'kofiStatus', label: 'Status', type: 'select', options: ['pending_approval', 'active', 'disabled'], required: false },
     ],
@@ -72,16 +72,48 @@ export function AdminPaymentSettings() {
   }
 
   const [formData, setFormData] = React.useState<FormData>({
-    bitcoinAddress: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-    solanaAddress: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAtU',
-    phantomUsername: '@onehumaninitiative',
+    bitcoinAddress: '',
+    solanaAddress: '',
+    phantomUsername: '',
     kofiEnabled: false,
-    kofiUrl: 'https://ko-fi.com/onehumaninitiative',
+    kofiUrl: '',
     kofiLabel: 'Support on Ko-fi',
     kofiStatus: 'pending_approval',
   });
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [message, setMessage] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Fetch settings on mount
+  React.useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const res = await fetch('/api/admin/payments');
+        if (!res.ok) {
+          if (res.status === 401) throw new Error('Unauthorized');
+          if (res.status === 403) throw new Error('Admin access required');
+          throw new Error('Failed to load settings');
+        }
+        const data = await res.json();
+        if (data.settings) {
+          setFormData({
+            bitcoinAddress: data.settings.bitcoin_address || '',
+            solanaAddress: data.settings.solana_address || '',
+            phantomUsername: data.settings.phantom_username || '',
+            kofiEnabled: data.settings.kofi_enabled || false,
+            kofiUrl: data.settings.kofi_url || '',
+            kofiLabel: data.settings.kofi_label || 'Support on Ko-fi',
+            kofiStatus: data.settings.kofi_status || 'pending_approval',
+          });
+        }
+      } catch (err) {
+        setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to load payment settings' });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchSettings();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -95,14 +127,66 @@ export function AdminPaymentSettings() {
     setMessage(null);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const res = await fetch('/api/admin/payments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to save settings');
+      }
+
       setMessage({ type: 'success', text: 'Payment settings saved successfully!' });
-    } catch {
-      setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to save settings. Please try again.' });
     } finally {
       setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <header>
+          <h1 className="text-3xl font-bold text-charcoal-900">Payment Settings</h1>
+          <p className="mt-1 text-stone-600">Configure payment addresses for each contribution method</p>
+        </header>
+        {paymentMethods.map((method) => (
+          <Card key={method.id} variant="default" padding="lg">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600">
+                  {method.icon}
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{method.name}</CardTitle>
+                  <CardDescription>
+                    {method.id === 'kofi'
+                      ? 'Ko-fi integration requires platform approval before enabling'
+                      : 'Address/username shown publicly for contributions'}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {method.fields.map((field) => (
+                <div key={field.name} className="animate-pulse">
+                  <div className="h-6 bg-stone-200 rounded w-1/4 mb-2" />
+                  <div className="h-10 bg-stone-200 rounded" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+        <div className="flex justify-end">
+          <Button type="submit" disabled size="lg">Loading...</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -131,9 +215,9 @@ export function AdminPaymentSettings() {
                     {method.id === 'kofi'
                       ? 'Ko-fi integration requires platform approval before enabling'
                       : 'Address/username shown publicly for contributions'}
-                </CardDescription>
+                  </CardDescription>
+                </div>
               </div>
-            </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {method.fields.map((field) => {
