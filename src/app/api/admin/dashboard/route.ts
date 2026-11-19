@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getAdminClient } from '@/lib/supabase/admin';
+import { verifyAdminApiAuth } from '@/lib/admin-api-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const authError = await verifyAdminApiAuth();
+    if (authError) {
+      return NextResponse.json({ error: authError.error }, { status: authError.status });
+    }
+
     const supabase = getAdminClient();
 
     // Get campaign with progress
