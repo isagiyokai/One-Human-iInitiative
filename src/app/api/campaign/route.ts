@@ -46,9 +46,7 @@ export async function GET() {
 
     // Get contribution aggregates from secure view
     const { data: contribAggregates, error: contribError } = await supabase
-      .from('contribution_aggregates_public')
-      .select('*')
-      .eq('campaign_id', campaignProgress.id);
+      .rpc('get_public_contribution_aggregates', { p_campaign_id: campaignProgress.id });
 
     let totalUsdValue = 0;
     if (!contribError && contribAggregates) {

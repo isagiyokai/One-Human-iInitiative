@@ -189,11 +189,9 @@ export async function GET() {
       });
     }
 
-    // Get contribution aggregates from secure view (NO individual contributions exposed)
+    // Fetch currency-level totals through a narrow RPC; individual rows stay private.
     const { data: aggregates, error } = await supabase
-      .from('contribution_aggregates_public')
-      .select('currency, contribution_count, total_amount, total_usd_value, first_contribution_at, last_contribution_at')
-      .eq('campaign_id', campaign.id);
+      .rpc('get_public_contribution_aggregates', { p_campaign_id: campaign.id });
 
     if (error) {
       return NextResponse.json({
