@@ -25,7 +25,8 @@ export async function GET() {
     }
 
     // Fetch only public petition fields and aggregate vote totals through a narrow RPC.
-    const { data: petitions, error } = await supabase
+    const admin = getAdminClient();
+    const { data: petitions, error } = await admin
       .rpc('get_public_petition_aggregates', { p_campaign_id: campaign.id });
 
     if (error) {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +46,8 @@ export async function GET() {
     }
 
     // Get contribution aggregates from secure view
-    const { data: contribAggregates, error: contribError } = await supabase
+    const admin = getAdminClient();
+    const { data: contribAggregates, error: contribError } = await admin
       .rpc('get_public_contribution_aggregates', { p_campaign_id: campaignProgress.id });
 
     let totalUsdValue = 0;

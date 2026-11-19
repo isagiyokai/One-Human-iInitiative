@@ -190,7 +190,8 @@ export async function GET() {
     }
 
     // Fetch currency-level totals through a narrow RPC; individual rows stay private.
-    const { data: aggregates, error } = await supabase
+    const admin = getAdminClient();
+    const { data: aggregates, error } = await admin
       .rpc('get_public_contribution_aggregates', { p_campaign_id: campaign.id });
 
     if (error) {
