@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { campaignSchema } from '@/lib/validators';
 import { validateTargetIncrease } from '@/lib/campaign';
+import { validateBitcoinAddress, validateSolanaAddress, validatePhantomUsername } from '@/lib/utils';
 import { verifyAdminApiAuth } from '@/lib/admin-api-auth';
 import { z } from 'zod';
 
@@ -62,6 +63,26 @@ export async function PATCH(request: Request) {
 
     if (!campaign) {
       return NextResponse.json({ error: 'No campaign found' }, { status: 404 });
+    }
+
+    // Never expose seed/example payment destinations by activating a campaign.
+    if (body.status === 'active') {
+      const { data: settings, error: settingsError } = await admin
+        .from('campaign_settings')
+        .select('bitcoin_address, solana_address, phantom_username')
+        .eq('campaign_id', campaign.id)
+        .maybeSingle();
+
+      if (settingsError || !settings) {
+        return NextResponse.json({ error: 'Payment settings must be configured before the campaign can be activated.' }, { status: 400 });
+      }
+      if (
+        !validateBitcoinAddress(settings.bitcoin_address || '') ||
+        !validateSolanaAddress(settings.solana_address || '') ||
+        !validatePhantomUsername(settings.phantom_username || '')
+      ) {
+        return NextResponse.json({ error: 'Replace the example payment destinations with valid, verified wallet addresses and a real Phantom username before activation.' }, { status: 400 });
+      }
     }
 
     // If target is being changed, validate
