@@ -65,11 +65,12 @@ const defaultWhyAnonymous =
   'I have chosen to keep my identity private to protect my personal safety and dignity while asking for help. I will not publish my name or personal details. Contributions will still be recorded, manually verified, and reflected in campaign updates and published spending.';
 
 const defaultHowItWorks =
-  '1. Choose Bitcoin or Solana\n' +
-  '2. Send your contribution to the matching wallet address\n' +
-  '3. Submit the transaction ID or signature and the amount sent\n' +
-  '4. I will have each transaction manually verified on-chain\n' +
-  '5. Confirmed contributions are added to the campaign total and reflected in published updates';
+  '1. Choose Bitcoin (BTC) or native Solana (SOL).\n' +
+  '2. If you already have crypto, send it to the matching wallet address.\n' +
+  '3. If you do not already own crypto, you may be able to buy BTC or SOL inside Trust Wallet using a supported payment provider. Availability depends on your country and payment method.\n' +
+  '4. The amount and transaction ID form is optional. You do not need to submit either to contribute.\n' +
+  '5. If you want me to match a transfer more easily, you may optionally submit both details after sending.\n' +
+  '6. Never send BTC to the Solana address or SOL to the Bitcoin address. Check the asset and network before confirming.';
 
 export function CampaignExplanation({
   title = 'Why This Campaign Exists',
