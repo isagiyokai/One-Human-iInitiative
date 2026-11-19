@@ -3,9 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import {
   bitcoinContributionSchema,
-  solanaContributionSchema,
-  phantomContributionSchema,
-  kofiContributionSchema
+  solanaContributionSchema
 } from '@/lib/validators';
 import { validateBitcoinAddress, validateSolanaAddress } from '@/lib/utils';
 
@@ -43,7 +41,7 @@ export async function POST(request: Request) {
     // Get campaign settings for address validation
     const { data: settings } = await supabase
       .from('campaign_settings')
-      .select('bitcoin_address, solana_address, kofi_enabled, kofi_status')
+      .select('bitcoin_address, solana_address')
       .eq('campaign_id', campaign.id)
       .single();
 
@@ -69,18 +67,6 @@ export async function POST(request: Request) {
             { status: 500 }
           );
         }
-        break;
-      case 'phantom':
-        validatedData = phantomContributionSchema.parse(body);
-        break;
-      case 'kofi':
-        if (!settings?.kofi_enabled || settings.kofi_status !== 'active') {
-          return NextResponse.json(
-            { error: 'Ko-fi is not currently available' },
-            { status: 400 }
-          );
-        }
-        validatedData = kofiContributionSchema.parse(body);
         break;
       default:
         return NextResponse.json(
