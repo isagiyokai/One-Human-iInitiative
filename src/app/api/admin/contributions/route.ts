@@ -7,30 +7,13 @@ export const dynamic = 'force-dynamic';
 
 const verifySchema = z.object({
   contributionId: z.string().uuid(),
-  action: z.enum(['verify', 'reject', 'refund', 'reverse']),
+  action: z.enum(['verify', 'reject', 'refund', 'reverse', 'notes']),
   reconNotes: z.string().optional(),
   // For manual USD conversion override
   usdValue: z.number().positive().optional(),
   exchangeRate: z.number().positive().optional(),
   rateSource: z.string().optional(),
 });
-
-// Exchange rate fetching function (can be replaced with external API)
-async function fetchExchangeRate(currency: string): Promise<{ rate: number; source: string } | null> {
-  // In production, integrate with CoinGecko, CoinMarketCap, or similar
-  // For now, return mock rates - ADMIN MUST OVERRIDE WITH REAL RATES
-  const mockRates: Record<string, number> = {
-    'BTC': 45000, // 1 BTC = $45,000
-    'SOL': 100,   // 1 SOL = $100
-    'USD': 1,     // 1 USD = $1
-  };
-
-  const rate = mockRates[currency.toUpperCase()];
-  if (rate) {
-    return { rate, source: 'manual_mock' };
-  }
-  return null;
-}
 
 export async function GET(request: Request) {
   try {
@@ -92,7 +75,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Contribution not found' }, { status: 404 });
     }
 
-    if (contribution.status !== 'pending' && action !== 'refund' && action !== 'reverse') {
+    if (contribution.status !== 'pending' && action !== 'refund' && action !== 'reverse' && action !== 'notes') {
       return NextResponse.json(
         { error: 'Contribution has already been processed' },
         { status: 400 }
@@ -111,27 +94,22 @@ export async function PATCH(request: Request) {
     let auditAction = '';
 
     if (action === 'verify') {
-      // Fetch exchange rate if not provided manually
       let finalUsdValue = usdValue;
       let finalExchangeRate = exchangeRate;
       let finalRateSource = rateSource;
       const finalRateTimestamp = new Date().toISOString();
 
-      if (!finalUsdValue || !finalExchangeRate) {
-        const rateData = await fetchExchangeRate(contribution.currency);
-        if (rateData) {
-          finalExchangeRate = finalExchangeRate || rateData.rate;
-          finalRateSource = finalRateSource || rateData.source;
-          if (!finalUsdValue) {
-            finalUsdValue = Number(contribution.amount) * finalExchangeRate;
-          }
-        } else {
-          // If no rate available and not manually provided, require manual entry
-          return NextResponse.json(
-            { error: 'Exchange rate required for USD conversion. Please provide usdValue and exchangeRate manually.' },
-            { status: 400 }
-          );
-        }
+      if (String(contribution.currency).toUpperCase() === 'USD') {
+        finalUsdValue = Number(contribution.amount);
+        finalExchangeRate = 1;
+        finalRateSource = 'USD';
+      } else if (!finalUsdValue || !finalExchangeRate) {
+        return NextResponse.json(
+          { error: 'Enter the verified USD value and exchange rate before confirming this contribution.' },
+          { status: 400 }
+        );
+      } else {
+        finalRateSource = finalRateSource || 'manual';
       }
 
       updateData = {
@@ -142,6 +120,7 @@ export async function PATCH(request: Request) {
         exchange_rate: finalExchangeRate,
         rate_source: finalRateSource,
         rate_timestamp: finalRateTimestamp,
+        updated_at: finalRateTimestamp,
       };
       auditAction = 'contribution.verified';
     } else if (action === 'reject') {
@@ -163,8 +142,15 @@ export async function PATCH(request: Request) {
         status: 'reversed',
         confirmed_at: new Date().toISOString(),
         recon_notes: reconNotes || 'Reversed by admin',
+        updated_at: new Date().toISOString(),
       };
       auditAction = 'contribution.reversed';
+    } else if (action === 'notes') {
+      updateData = {
+        recon_notes: reconNotes ?? null,
+        updated_at: new Date().toISOString(),
+      };
+      auditAction = 'contribution.notes_updated';
     }
 
     const { data: updated, error } = await admin

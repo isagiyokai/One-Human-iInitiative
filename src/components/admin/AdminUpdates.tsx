@@ -6,282 +6,214 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
 
-interface Update {
+interface CampaignUpdate {
   id: string;
   title: string;
   content: string;
-  imageUrl?: string;
+  imageUrl: string;
   status: 'draft' | 'published';
-  publishedAt?: string;
+  publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-const mockUpdates: Update[] = [
-  {
-    id: '1',
-    title: 'Campaign Launched!',
-    content: 'We are excited to announce the launch of the One Human Initiative. Thank you to everyone who has already contributed.',
-    imageUrl: 'https://example.com/images/launch.jpg',
-    status: 'published',
-    publishedAt: '2024-01-15T00:00:00Z',
-    createdAt: '2024-01-14T20:00:00Z',
-    updatedAt: '2024-01-15T00:00:00Z',
-  },
-  {
-    id: '2',
-    title: 'First Milestone Reached',
-    content: 'We have reached $10,000 in confirmed contributions! This is an incredible start. The community petition for increasing the target is now open.',
-    imageUrl: undefined,
-    status: 'published',
-    publishedAt: '2024-01-18T15:30:00Z',
-    createdAt: '2024-01-18T15:00:00Z',
-    updatedAt: '2024-01-18T15:30:00Z',
-  },
-  {
-    id: '3',
-    title: 'Transparency Report - Week 1',
-    content: 'Our first weekly transparency report is now available. View all expenses and contributions on the transparency page.',
-    imageUrl: 'https://example.com/images/transparency-week1.jpg',
-    status: 'published',
-    publishedAt: '2024-01-22T10:00:00Z',
-    createdAt: '2024-01-21T18:00:00Z',
-    updatedAt: '2024-01-22T10:00:00Z',
-  },
-  {
-    id: '4',
-    title: 'Draft: Upcoming Community Event',
-    content: 'Planning a virtual community meetup for supporters. Details to be announced soon.',
-    imageUrl: undefined,
-    status: 'draft',
-    publishedAt: undefined,
-    createdAt: '2024-01-25T12:00:00Z',
-    updatedAt: '2024-01-25T12:00:00Z',
-  },
-];
+interface UpdateDraft {
+  title: string;
+  content: string;
+  imageUrl: string;
+  status: 'draft' | 'published';
+}
 
-const statusConfig = {
-  draft: { label: 'Draft', variant: 'warning' as const },
-  published: { label: 'Published', variant: 'success' as const },
-};
+const emptyDraft: UpdateDraft = { title: '', content: '', imageUrl: '', status: 'draft' };
+
+function fromRow(row: Record<string, unknown>): CampaignUpdate {
+  return {
+    id: String(row.id),
+    title: String(row.title || ''),
+    content: String(row.content || ''),
+    imageUrl: String(row.image_url || ''),
+    status: row.status === 'published' ? 'published' : 'draft',
+    publishedAt: row.published_at ? String(row.published_at) : null,
+    createdAt: String(row.created_at || ''),
+    updatedAt: String(row.updated_at || ''),
+  };
+}
 
 export function AdminUpdates() {
+  const [updates, setUpdates] = React.useState<CampaignUpdate[]>([]);
   const [search, setSearch] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<'all' | 'draft' | 'published'>('all');
-  const [updates] = React.useState<Update[]>(mockUpdates);
   const [editingId, setEditingId] = React.useState<string | null>(null);
-  const [formData, setFormData] = React.useState<Partial<Update>>({});
+  const [formData, setFormData] = React.useState<UpdateDraft>(emptyDraft);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [message, setMessage] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const filteredUpdates = updates.filter(u => {
-    const matchesSearch = u.title.toLowerCase().includes(search.toLowerCase()) ||
-      u.content.toLowerCase().includes(search.toLowerCase()) ||
-      u.id.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const loadUpdates = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/admin/updates', { cache: 'no-store' });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Unable to load campaign updates');
+      setUpdates(Array.isArray(payload.updates) ? payload.updates.map(fromRow) : []);
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Unable to load campaign updates' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => { void loadUpdates(); }, [loadUpdates]);
+
+  const filteredUpdates = updates.filter((update) => {
+    const query = search.toLowerCase();
+    const matches = update.title.toLowerCase().includes(query) ||
+      update.content.toLowerCase().includes(query) || update.id.toLowerCase().includes(query);
+    return matches && (statusFilter === 'all' || update.status === statusFilter);
   });
 
-  const publishedCount = updates.filter(u => u.status === 'published').length;
-  const draftCount = updates.filter(u => u.status === 'draft').length;
+  const beginCreate = () => {
+    setEditingId('new');
+    setFormData(emptyDraft);
+    setMessage(null);
+  };
 
-  const handleEdit = (update: Update) => {
+  const beginEdit = (update: CampaignUpdate) => {
     setEditingId(update.id);
     setFormData({
       title: update.title,
       content: update.content,
-      imageUrl: update.imageUrl || '',
+      imageUrl: update.imageUrl,
       status: update.status,
     });
+    setMessage(null);
   };
 
-  const handleCancel = () => {
+  const cancelEdit = () => {
     setEditingId(null);
-    setFormData({});
+    setFormData(emptyDraft);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingId) return;
-
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setIsSaving(true);
     setMessage(null);
-
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMessage({ type: 'success', text: 'Update saved successfully!' });
+      const isNew = editingId === 'new';
+      const response = await fetch('/api/admin/updates', {
+        method: isNew ? 'POST' : 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(isNew ? formData : { id: editingId, ...formData }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Unable to save update');
       setEditingId(null);
-      setFormData({});
-    } catch {
-      setMessage({ type: 'error', text: 'Failed to save. Please try again.' });
+      setFormData(emptyDraft);
+      setMessage({ type: 'success', text: isNew ? 'Update created.' : 'Update saved.' });
+      await loadUpdates();
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Unable to save update' });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Delete this update? This action cannot be undone.')) {
-      console.log('Deleted:', id);
-      alert('Update deleted! (Demo - would call API in production)');
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Delete this update? This cannot be undone.')) return;
+    setDeletingId(id);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/admin/updates?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Unable to delete update');
+      setMessage({ type: 'success', text: 'Update deleted.' });
+      await loadUpdates();
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Unable to delete update' });
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  const handleCreate = () => {
-    const newUpdate: Partial<Update> = {
-      title: '',
-      content: '',
-      imageUrl: '',
-      status: 'draft',
-    };
-    setFormData(newUpdate);
-    setEditingId('new');
-  };
-
-  const isNew = editingId === 'new';
+  const publishedCount = updates.filter((update) => update.status === 'published').length;
+  const draftCount = updates.filter((update) => update.status === 'draft').length;
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-charcoal-900">Updates</h1>
           <p className="mt-1 text-stone-600">Manage campaign updates and announcements</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Badge variant="success">{publishedCount} Published</Badge>
           <Badge variant="warning">{draftCount} Drafts</Badge>
-          <Button onClick={handleCreate}>Create Update</Button>
+          <Button onClick={beginCreate}>Create Update</Button>
         </div>
       </header>
 
-      {message && (
-        <div className={`p-4 rounded-lg ${message.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-800'}`} role="alert">
-          {message.text}
-        </div>
-      )}
+      {message && <div className={`rounded-lg border p-4 text-sm ${message.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'}`} role="alert">{message.text}</div>}
 
-      {/* Filters */}
       <Card variant="default" padding="md">
-        <CardContent className="flex flex-col sm:flex-row gap-4">
-          <Input
-            placeholder="Search by title or content..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-sm"
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'draft' | 'published')}
-            className="w-full sm:w-48 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-charcoal-500"
-          >
-            <option value="all">All Statuses</option>
+        <CardContent className="flex flex-col gap-4 sm:flex-row">
+          <Input placeholder="Search by title or content..." value={search} onChange={(event) => setSearch(event.target.value)} className="max-w-lg flex-1" />
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="w-full rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-charcoal-900 sm:w-48">
+            <option value="all">All statuses</option>
             <option value="draft">Draft</option>
             <option value="published">Published</option>
           </select>
         </CardContent>
       </Card>
 
-      {/* Edit Form */}
       {editingId && (
         <Card variant="default" padding="lg">
-          <CardHeader>
-            <CardTitle>{isNew ? 'Create New Update' : 'Edit Update'}</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{editingId === 'new' ? 'Create update' : 'Edit update'}</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                label="Title"
-                name="title"
-                value={formData.title || ''}
-                onChange={handleChange}
-                required
-                placeholder="Update title"
-              />
-              <Textarea
-                label="Content (Markdown supported)"
-                name="content"
-                value={formData.content || ''}
-                onChange={handleChange}
-                rows={8}
-                required
-                placeholder="Write your update here..."
-              />
-              <Input
-                label="Image URL (optional)"
-                type="url"
-                name="imageUrl"
-                value={formData.imageUrl || ''}
-                onChange={handleChange}
-                placeholder="https://example.com/image.jpg"
-              />
-              <select
-                name="status"
-                value={formData.status || 'draft'}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-charcoal-500"
-              >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-              </select>
-              <div className="flex justify-end gap-4 pt-4">
-                <Button type="button" variant="outline" onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? 'Saving...' : isNew ? 'Create' : 'Save Changes'}
-                </Button>
+              <Input label="Title" name="title" value={formData.title} onChange={(event) => setFormData((current) => ({ ...current, title: event.target.value }))} required maxLength={200} />
+              <Textarea label="Content (Markdown supported)" name="content" value={formData.content} onChange={(event) => setFormData((current) => ({ ...current, content: event.target.value }))} rows={8} required />
+              <Input label="Image URL (optional)" type="url" name="imageUrl" value={formData.imageUrl} onChange={(event) => setFormData((current) => ({ ...current, imageUrl: event.target.value }))} placeholder="https://..." />
+              <label className="block text-sm font-medium text-charcoal-700">
+                Publication status
+                <select value={formData.status} onChange={(event) => setFormData((current) => ({ ...current, status: event.target.value as UpdateDraft['status'] }))} className="mt-1 block w-full rounded-lg border border-stone-300 bg-white px-4 py-2.5">
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+              </label>
+              <div className="flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={cancelEdit}>Cancel</Button>
+                <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : editingId === 'new' ? 'Create update' : 'Save changes'}</Button>
               </div>
             </form>
           </CardContent>
         </Card>
       )}
 
-      {/* Updates List */}
       <Card variant="default" padding="md">
         <CardContent>
-          <div className="space-y-4">
-            {filteredUpdates.map((update) => (
-              <div key={update.id} className="border border-stone-200 rounded-lg p-4 hover:bg-stone-50 transition-colors">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-charcoal-900 truncate">{update.title}</h3>
-                      <Badge variant={statusConfig[update.status].variant} size="md">
-                        {statusConfig[update.status].label}
-                      </Badge>
-                    </div>
-                    <p className="text-stone-600 line-clamp-2">{update.content}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-stone-500">
-                      <span>Created: {new Date(update.createdAt).toLocaleString()}</span>
-                      {update.publishedAt && <span>Published: {new Date(update.publishedAt).toLocaleString()}</span>}
-                      {update.imageUrl && <span>📷 Has image</span>}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 sm:ml-4">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(update)}>
-                      Edit
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => handleDelete(update.id)}>
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredUpdates.length === 0 && (
-            <div className="text-center py-12">
-              <svg className="mx-auto w-12 h-12 text-stone-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="text-stone-600">No updates match your filters</p>
-            </div>
-          )}
+          {isLoading ? <p className="py-10 text-center text-stone-500">Loading updates from the database...</p> :
+           filteredUpdates.length === 0 ? <p className="py-10 text-center text-stone-500">No updates found.</p> :
+           <div className="space-y-3">
+             {filteredUpdates.map((update) => (
+               <article key={update.id} className="rounded-xl border border-stone-200 p-4">
+                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                   <div className="min-w-0 flex-1">
+                     <div className="mb-2 flex flex-wrap items-center gap-3">
+                       <h2 className="font-semibold text-charcoal-900">{update.title}</h2>
+                       <Badge variant={update.status === 'published' ? 'success' : 'warning'}>{update.status}</Badge>
+                     </div>
+                     <p className="whitespace-pre-wrap text-sm text-stone-600">{update.content}</p>
+                     <p className="mt-3 text-xs text-stone-500">Created {update.createdAt ? new Date(update.createdAt).toLocaleString() : '—'}{update.publishedAt ? ` · Published ${new Date(update.publishedAt).toLocaleString()}` : ''}</p>
+                   </div>
+                   <div className="flex shrink-0 gap-2">
+                     <Button size="sm" variant="outline" onClick={() => beginEdit(update)}>Edit</Button>
+                     <Button size="sm" variant="ghost" disabled={deletingId === update.id} onClick={() => void handleDelete(update.id)}>{deletingId === update.id ? 'Deleting...' : 'Delete'}</Button>
+                   </div>
+                 </div>
+               </article>
+             ))}
+           </div>}
         </CardContent>
       </Card>
     </div>

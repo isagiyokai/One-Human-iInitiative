@@ -79,7 +79,10 @@ export async function POST(request: Request) {
       .from('campaign_updates')
       .insert({
         campaign_id: campaign.id,
-        ...validated,
+        title: validated.title,
+        content: validated.content,
+        image_url: validated.imageUrl || null,
+        status: validated.status,
         published_at: validated.status === 'published' ? new Date().toISOString() : null,
       })
       .select()
@@ -123,10 +126,14 @@ export async function PATCH(request: Request) {
     }
 
     const validated = updateSchema.partial().parse(updates);
-    const updateData = {
-      ...validated,
-      published_at: validated.status === 'published' ? new Date().toISOString() :
-                    validated.status === 'draft' ? null : undefined,
+    const updateData: Record<string, unknown> = {
+      ...(validated.title !== undefined ? { title: validated.title } : {}),
+      ...(validated.content !== undefined ? { content: validated.content } : {}),
+      ...(validated.imageUrl !== undefined ? { image_url: validated.imageUrl || null } : {}),
+      ...(validated.status !== undefined ? {
+        status: validated.status,
+        published_at: validated.status === 'published' ? new Date().toISOString() : null,
+      } : {}),
       updated_at: new Date().toISOString(),
     };
 

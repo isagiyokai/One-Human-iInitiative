@@ -2,70 +2,46 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
 const SESSION_COOKIE_NAME = 'admin_session';
-const SESSION_SECRET = new TextEncoder().encode(process.env.ADMIN_SESSION_SECRET!);
+const SESSION_ISSUER = 'one-human-initiative';
+const SESSION_AUDIENCE = 'one-human-initiative-admin';
 
-interface AdminSession {
-  username: string;
-  iat: number;
-  exp: number;
-}
+async function hasValidAdminSession(token: string): Promise<boolean> {
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  const username = process.env.ADMIN_USERNAME;
+  if (!secret || new TextEncoder().encode(secret).byteLength < 32 || !username) {
+    return false;
+  }
 
-async function verifySession(token: string): Promise<AdminSession | null> {
   try {
-    const { payload } = await jwtVerify(token, SESSION_SECRET);
-    return {
-      username: payload.username as string,
-      iat: payload.iat as number,
-      exp: payload.exp as number,
-    };
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), {
+      algorithms: ['HS256'],
+      issuer: SESSION_ISSUER,
+      audience: SESSION_AUDIENCE,
+    });
+    return typeof payload.username === 'string' && payload.username === username;
   } catch {
-    return null;
+    return false;
   }
 }
 
 export async function middleware(request: NextRequest) {
-  // Check for admin session cookie
-  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
-  let isAuthenticated = false;
-
-  if (sessionCookie?.value) {
-    const session = await verifySession(sessionCookie.value);
-    if (session) {
-      isAuthenticated = true;
-    }
+  const pathname = request.nextUrl.pathname;
+  if (!pathname.startsWith('/admin') || pathname === '/admin/login') {
+    return NextResponse.next();
   }
 
-  // Protect admin routes
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (request.nextUrl.pathname === '/admin/login') {
-      // Allow access to login page
-      if (isAuthenticated) {
-        // Redirect authenticated users to dashboard
-        return NextResponse.redirect(new URL('/admin', request.url));
-      }
-      return NextResponse.next();
-    }
-
-    // Require authentication for all other admin routes
-    if (!isAuthenticated) {
-      const redirectUrl = new URL('/admin/login', request.url);
-      redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
-      return NextResponse.redirect(redirectUrl);
-    }
+  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  if (token && await hasValidAdminSession(token)) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  const redirectUrl = new URL('/admin/login', request.url);
+  redirectUrl.searchParams.set('redirect', pathname);
+  return NextResponse.redirect(redirectUrl);
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

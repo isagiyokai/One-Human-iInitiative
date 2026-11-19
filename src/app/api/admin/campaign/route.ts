@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { campaignSchema } from '@/lib/validators';
 import { validateTargetIncrease } from '@/lib/campaign';
+import { validateBitcoinAddress, validateSolanaAddress } from '@/lib/utils';
 import { verifyAdminApiAuth } from '@/lib/admin-api-auth';
 import { z } from 'zod';
 
@@ -64,6 +65,32 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'No campaign found' }, { status: 404 });
     }
 
+    // Never expose seed/example payment destinations by activating a campaign.
+    if (body.status === 'active') {
+      const { data: settings, error: settingsError } = await admin
+        .from('campaign_settings')
+        .select('bitcoin_address, solana_address')
+        .eq('campaign_id', campaign.id)
+        .maybeSingle();
+
+      if (settingsError || !settings) {
+        return NextResponse.json({ error: 'Payment settings must be configured before the campaign can be activated.' }, { status: 400 });
+      }
+      const placeholderBitcoin = 'bc1qexample00000000000000000000000000000000000';
+      const placeholderSolana = 'SolanaExample1111111111111111111111111111111111';
+      const hasPlaceholder =
+        settings.bitcoin_address === placeholderBitcoin ||
+        settings.solana_address === placeholderSolana;
+
+      if (
+        hasPlaceholder ||
+        !validateBitcoinAddress(settings.bitcoin_address || '') ||
+        !validateSolanaAddress(settings.solana_address || '')
+      ) {
+        return NextResponse.json({ error: 'Configure valid Bitcoin and Solana wallet addresses before activation.' }, { status: 400 });
+      }
+    }
+
     // If target is being changed, validate
     if (body.target !== undefined && body.target !== campaign.target) {
       const validation = validateTargetIncrease(campaign.target, body.target);
@@ -73,9 +100,30 @@ export async function PATCH(request: Request) {
     }
 
     const validated = campaignSchema.parse(body);
+    const campaignUpdate = {
+      name: validated.name,
+      description: validated.description,
+      target: validated.target,
+      max_target: validated.maxTarget,
+      start_date: validated.startDate,
+      end_date: validated.endDate,
+      status: validated.status,
+      hero_title: validated.heroTitle,
+      hero_tagline: validated.heroTagline,
+      public_content: validated.publicContent ?? null,
+      ...(validated.storyTitle !== undefined ? { story_title: validated.storyTitle } : {}),
+      ...(validated.storyContent !== undefined ? { story_content: validated.storyContent } : {}),
+      ...(validated.privacyTitle !== undefined ? { privacy_title: validated.privacyTitle } : {}),
+      ...(validated.privacyContent !== undefined ? { privacy_content: validated.privacyContent } : {}),
+      ...(validated.processTitle !== undefined ? { process_title: validated.processTitle } : {}),
+      ...(validated.processContent !== undefined ? { process_content: validated.processContent } : {}),
+      ...(validated.customBlocks !== undefined ? { custom_blocks: validated.customBlocks } : {}),
+      updated_at: new Date().toISOString(),
+    };
+
     const { data: updated, error } = await admin
       .from('campaigns')
-      .update({ ...validated, updated_at: new Date().toISOString() })
+      .update(campaignUpdate)
       .eq('id', campaign.id)
       .select()
       .single();

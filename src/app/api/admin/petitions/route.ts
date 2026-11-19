@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 const petitionActionSchema = z.object({
   petitionId: z.string().uuid(),
-  action: z.enum(['approve', 'reject', 'cancel']),
+  action: z.enum(['approve', 'reject', 'cancel', 'notes']),
   adminNotes: z.string().optional(),
 });
 
@@ -88,12 +88,14 @@ export async function PATCH(request: Request) {
 
     const updateData: Record<string, unknown> = {
       admin_notes: adminNotes || null,
-      decided_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
     let auditAction = '';
 
-    if (action === 'approve') {
+    if (action === 'notes') {
+      auditAction = 'petition.notes_updated';
+    } else if (action === 'approve') {
+      updateData.decided_at = new Date().toISOString();
       if (petition.status !== 'voting') {
         return NextResponse.json(
           { error: 'Can only approve petitions in voting status' },
@@ -145,6 +147,7 @@ export async function PATCH(request: Request) {
         );
       }
       updateData.status = 'rejected';
+      updateData.decided_at = new Date().toISOString();
       auditAction = 'petition.rejected';
     } else if (action === 'cancel') {
       if (!['collecting', 'voting'].includes(petition.status)) {
@@ -154,6 +157,7 @@ export async function PATCH(request: Request) {
         );
       }
       updateData.status = 'cancelled';
+      updateData.decided_at = new Date().toISOString();
       auditAction = 'petition.cancelled';
     }
 

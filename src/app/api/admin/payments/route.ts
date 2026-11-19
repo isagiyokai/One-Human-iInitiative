@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { campaignSettingsSchema } from '@/lib/validators';
-import { validateBitcoinAddress, validateSolanaAddress, validatePhantomUsername } from '@/lib/utils';
+import { validateBitcoinAddress, validateSolanaAddress } from '@/lib/utils';
 import { verifyAdminApiAuth } from '@/lib/admin-api-auth';
 import { z } from 'zod';
 
@@ -64,6 +64,12 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'No campaign found' }, { status: 404 });
     }
 
+    // Explicitly reject the demo wallet values from the seed migration.
+    if (body.bitcoinAddress === 'bc1qexample00000000000000000000000000000000000'
+      || body.solanaAddress === 'SolanaExample1111111111111111111111111111111111') {
+      return NextResponse.json({ error: 'Example payment destinations cannot be saved. Enter real wallet addresses.' }, { status: 400 });
+    }
+
     // Validate addresses
     if (body.bitcoinAddress && !validateBitcoinAddress(body.bitcoinAddress)) {
       return NextResponse.json({ error: 'Invalid Bitcoin address' }, { status: 400 });
@@ -71,14 +77,21 @@ export async function PATCH(request: Request) {
     if (body.solanaAddress && !validateSolanaAddress(body.solanaAddress)) {
       return NextResponse.json({ error: 'Invalid Solana address' }, { status: 400 });
     }
-    if (body.phantomUsername && !validatePhantomUsername(body.phantomUsername)) {
-      return NextResponse.json({ error: 'Invalid Phantom username (must start with @)' }, { status: 400 });
-    }
 
     const validated = campaignSettingsSchema.parse(body);
+    const settingsUpdate = {
+      bitcoin_address: validated.bitcoinAddress,
+      solana_address: validated.solanaAddress,
+      kofi_enabled: validated.kofiEnabled,
+      kofi_url: validated.kofiUrl || null,
+      kofi_label: validated.kofiLabel || 'Support on Ko-fi',
+      ...(validated.kofiStatus !== undefined ? { kofi_status: validated.kofiStatus } : {}),
+      updated_at: new Date().toISOString(),
+    };
+
     const { data: updated, error } = await admin
       .from('campaign_settings')
-      .update({ ...validated, updated_at: new Date().toISOString() })
+      .update(settingsUpdate)
       .eq('campaign_id', campaign.id)
       .select()
       .single();
@@ -91,11 +104,6 @@ export async function PATCH(request: Request) {
     const actionMap: Record<string, string> = {
       bitcoinAddress: 'payment.bitcoin_address_updated',
       solanaAddress: 'payment.solana_address_updated',
-      phantomUsername: 'payment.phantom_username_updated',
-      kofiEnabled: 'payment.kofi_settings_updated',
-      kofiUrl: 'payment.kofi_settings_updated',
-      kofiLabel: 'payment.kofi_settings_updated',
-      kofiStatus: 'payment.kofi_settings_updated',
     };
 
     const changedFields = Object.keys(body);

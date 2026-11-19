@@ -11,11 +11,13 @@ interface TabsProps {
   className?: string;
 }
 
-export function Tabs({ children, className = '' }: TabsProps) {
+export function Tabs({ value, onValueChange, children, className = '' }: TabsProps) {
   return (
-    <div className={cn('data-tabs', className)} data-tabs>
-      {children}
-    </div>
+    <TabsProvider value={value} onValueChange={onValueChange}>
+      <div className={cn('data-tabs', className)} data-tabs>
+        {children}
+      </div>
+    </TabsProvider>
   );
 }
 
@@ -61,12 +63,13 @@ export function TabsTrigger({ value, className = '', children, ...props }: TabsT
       isActive={isActive}
       onValueChange={onValueChange}
       className={className}
-      children={children}
       reducedMotion={reducedMotion}
       backgroundX={backgroundX}
       backgroundWidth={backgroundWidth}
       {...props}
-    />
+    >
+      {children}
+    </TabsTriggerInner>
   );
 }
 

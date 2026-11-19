@@ -46,7 +46,7 @@ WHERE name = 'One Human Initiative';
 
 -- Update campaign_progress_public view to include story fields
 DROP VIEW IF EXISTS campaign_progress_public;
-CREATE VIEW campaign_progress_public AS
+CREATE VIEW campaign_progress_public WITH (security_barrier = true) AS
 SELECT
     c.id,
     c.name,

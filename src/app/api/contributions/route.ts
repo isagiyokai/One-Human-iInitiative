@@ -3,9 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import {
   bitcoinContributionSchema,
-  solanaContributionSchema,
-  phantomContributionSchema,
-  kofiContributionSchema
+  solanaContributionSchema
 } from '@/lib/validators';
 import { validateBitcoinAddress, validateSolanaAddress } from '@/lib/utils';
 
@@ -19,7 +17,7 @@ export async function POST(request: Request) {
     // Get active campaign
     const { data: campaign } = await supabase
       .from('campaigns')
-      .select('id, status, target')
+      .select('id, status, target, start_date, end_date')
       .in('status', ['active', 'paused', 'target_reached'])
       .order('created_at', { ascending: false })
       .limit(1)
@@ -33,9 +31,18 @@ export async function POST(request: Request) {
     }
 
     // Check if campaign can accept contributions
-    if (campaign.status !== 'active') {
+    const now = Date.now();
+    const startsAt = new Date(campaign.start_date).getTime();
+    const endsAt = new Date(campaign.end_date).getTime();
+    if (
+      campaign.status !== 'active' ||
+      !Number.isFinite(startsAt) ||
+      !Number.isFinite(endsAt) ||
+      now < startsAt ||
+      now > endsAt
+    ) {
       return NextResponse.json(
-        { error: 'Campaign is not accepting contributions at this time' },
+        { error: 'The campaign is not currently accepting contributions.' },
         { status: 400 }
       );
     }
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
     // Get campaign settings for address validation
     const { data: settings } = await supabase
       .from('campaign_settings')
-      .select('bitcoin_address, solana_address, kofi_enabled, kofi_status')
+      .select('bitcoin_address, solana_address')
       .eq('campaign_id', campaign.id)
       .single();
 
@@ -70,18 +77,6 @@ export async function POST(request: Request) {
           );
         }
         break;
-      case 'phantom':
-        validatedData = phantomContributionSchema.parse(body);
-        break;
-      case 'kofi':
-        if (!settings?.kofi_enabled || settings.kofi_status !== 'active') {
-          return NextResponse.json(
-            { error: 'Ko-fi is not currently available' },
-            { status: 400 }
-          );
-        }
-        validatedData = kofiContributionSchema.parse(body);
-        break;
       default:
         return NextResponse.json(
           { error: 'Invalid payment method' },
@@ -89,13 +84,19 @@ export async function POST(request: Request) {
         );
     }
 
-    // Check for duplicate transaction hash
-    const { data: existing } = await supabase
+    // Duplicate checks require access to private contribution rows.
+    const admin = getAdminClient();
+    const { data: existing, error: duplicateCheckError } = await admin
       .from('contributions')
       .select('id')
       .eq('transaction_hash', validatedData.transactionHash)
       .eq('payment_method', validatedData.paymentMethod)
-      .single();
+      .maybeSingle();
+
+    if (duplicateCheckError) {
+      console.error('Contribution duplicate check error:', duplicateCheckError);
+      return NextResponse.json({ error: 'Unable to verify whether this transaction was already submitted' }, { status: 500 });
+    }
 
     if (existing) {
       return NextResponse.json(
@@ -105,7 +106,6 @@ export async function POST(request: Request) {
     }
 
     // Create pending contribution record
-    const admin = getAdminClient();
     const { data: contribution, error } = await admin
       .from('contributions')
       .insert({
@@ -184,11 +184,10 @@ export async function GET() {
       });
     }
 
-    // Get contribution aggregates from secure view (NO individual contributions exposed)
-    const { data: aggregates, error } = await supabase
-      .from('contribution_aggregates_public')
-      .select('currency, contribution_count, total_amount, total_usd_value, first_contribution_at, last_contribution_at')
-      .eq('campaign_id', campaign.id);
+    // Fetch currency-level totals through a narrow RPC; individual rows stay private.
+    const admin = getAdminClient();
+    const { data: aggregates, error } = await admin
+      .rpc('get_public_contribution_aggregates', { p_campaign_id: campaign.id });
 
     if (error) {
       return NextResponse.json({
@@ -199,8 +198,14 @@ export async function GET() {
     }
 
     const byCurrency = aggregates || [];
-    const totalConfirmedCount = byCurrency.reduce((sum, c) => sum + c.contribution_count, 0);
-    const totalUsdValue = byCurrency.reduce((sum, c) => sum + Number(c.total_usd_value || 0), 0);
+    const totalConfirmedCount = byCurrency.reduce(
+      (sum: number, item: { contribution_count: number | string }) => sum + Number(item.contribution_count || 0),
+      0
+    );
+    const totalUsdValue = byCurrency.reduce(
+      (sum: number, item: { total_usd_value?: number | string | null }) => sum + Number(item.total_usd_value || 0),
+      0
+    );
 
     return NextResponse.json({
       aggregates: { byCurrency },

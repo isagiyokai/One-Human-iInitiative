@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,14 +12,22 @@ export async function GET() {
     const { data: campaignProgress, error: progressError } = await supabase
       .from('campaign_progress_public')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('start_date', { ascending: false })
       .limit(1)
       .single();
 
-    if (progressError || !campaignProgress) {
+    if (progressError?.code === 'PGRST116' || !campaignProgress) {
       return NextResponse.json(
-        { error: 'No active campaign found' },
+        { error: 'No active campaign found', code: 'NO_ACTIVE_CAMPAIGN' },
         { status: 404 }
+      );
+    }
+
+    if (progressError) {
+      console.error('Campaign progress view error:', progressError);
+      return NextResponse.json(
+        { error: 'Unable to load campaign data' },
+        { status: 500 }
       );
     }
 
@@ -37,14 +46,16 @@ export async function GET() {
     }
 
     // Get contribution aggregates from secure view
-    const { data: contribAggregates, error: contribError } = await supabase
-      .from('contribution_aggregates_public')
-      .select('*')
-      .eq('campaign_id', campaignProgress.id);
+    const admin = getAdminClient();
+    const { data: contribAggregates, error: contribError } = await admin
+      .rpc('get_public_contribution_aggregates', { p_campaign_id: campaignProgress.id });
 
     let totalUsdValue = 0;
     if (!contribError && contribAggregates) {
-      totalUsdValue = contribAggregates.reduce((sum, c) => sum + Number(c.total_usd_value || 0), 0);
+      totalUsdValue = contribAggregates.reduce(
+        (sum: number, item: { total_usd_value?: number | string | null }) => sum + Number(item.total_usd_value || 0),
+        0
+      );
     }
 
     // Get expense summary from secure view
@@ -69,10 +80,6 @@ export async function GET() {
       settings: {
         bitcoin_address: settings.bitcoin_address,
         solana_address: settings.solana_address,
-        phantom_username: settings.phantom_username,
-        kofi_enabled: settings.kofi_enabled && settings.kofi_status === 'active',
-        kofi_url: settings.kofi_url,
-        kofi_label: settings.kofi_label,
       },
       // Story/Content fields for CampaignExplanation
       content: {

@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (keep real environment files untracked, but retain the template)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated Playwright output may contain sensitive test data
+/playwright-report/
+/test-results/

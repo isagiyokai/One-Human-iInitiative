@@ -24,17 +24,18 @@ export async function GET() {
       return NextResponse.json({ petition: null });
     }
 
-    // Get active petition from secure view (includes vote aggregates)
-    const { data: petition, error } = await supabase
-      .from('petition_aggregates_public')
-      .select('*')
-      .eq('campaign_id', campaign.id)
-      .in('status', ['collecting', 'voting', 'approved', 'rejected'])
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    // Fetch only public petition fields and aggregate vote totals through a narrow RPC.
+    const admin = getAdminClient();
+    const { data: petitions, error } = await admin
+      .rpc('get_public_petition_aggregates', { p_campaign_id: campaign.id });
 
-    if (error || !petition) {
+    if (error) {
+      console.error('Public petition aggregate query failed:', error);
+      return NextResponse.json({ error: 'Unable to load petition data' }, { status: 500 });
+    }
+
+    const petition = petitions?.[0];
+    if (!petition) {
       return NextResponse.json({ petition: null });
     }
 
@@ -95,13 +96,31 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if there's already an active petition
-    const { data: existingPetition } = await supabase
+    const admin = getAdminClient();
+
+    // Petition rows and participation-token hashes are private server-side data.
+    const { data: registeredToken, error: tokenLookupError } = await admin
+      .from('browser_participation_tokens')
+      .select('id')
+      .eq('token_hash', tokenHash)
+      .maybeSingle();
+
+    if (tokenLookupError || !registeredToken) {
+      return NextResponse.json({ error: 'Register this browser before creating a petition' }, { status: 403 });
+    }
+
+    // Check if there's already an active petition.
+    const { data: existingPetition, error: existingPetitionError } = await admin
       .from('petitions')
       .select('id, status')
       .eq('campaign_id', campaign.id)
       .in('status', ['collecting', 'voting'])
-      .single();
+      .maybeSingle();
+
+    if (existingPetitionError) {
+      console.error('Existing petition lookup error:', existingPetitionError);
+      return NextResponse.json({ error: 'Unable to check for an existing petition' }, { status: 500 });
+    }
 
     if (existingPetition) {
       return NextResponse.json(
@@ -110,20 +129,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Register token if not exists
-    const { error: tokenError } = await supabase
-      .from('browser_participation_tokens')
-      .upsert({ token_hash: tokenHash }, { onConflict: 'token_hash', ignoreDuplicates: true });
-
-    if (tokenError && tokenError.code !== '23505') {
-      console.error('Token registration error:', tokenError);
-    }
-
-    // Check if this token already signed (first signature)
-    // For simplicity, we'll allow the first token to create the petition
-    // In practice, you'd track signatures separately
-
-    const admin = getAdminClient();
+    // Only a previously registered browser token can create a petition.
+    // Signature aggregation is represented by token_count until per-signature records exist.
     const { data: petition, error } = await admin
       .from('petitions')
       .insert({
