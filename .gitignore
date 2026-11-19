@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated Playwright output may contain sensitive test data
+/playwright-report/
+/test-results/
