@@ -89,13 +89,19 @@ export async function POST(request: Request) {
         );
     }
 
-    // Check for duplicate transaction hash
-    const { data: existing } = await supabase
+    // Duplicate checks require access to private contribution rows.
+    const admin = getAdminClient();
+    const { data: existing, error: duplicateCheckError } = await admin
       .from('contributions')
       .select('id')
       .eq('transaction_hash', validatedData.transactionHash)
       .eq('payment_method', validatedData.paymentMethod)
-      .single();
+      .maybeSingle();
+
+    if (duplicateCheckError) {
+      console.error('Contribution duplicate check error:', duplicateCheckError);
+      return NextResponse.json({ error: 'Unable to verify whether this transaction was already submitted' }, { status: 500 });
+    }
 
     if (existing) {
       return NextResponse.json(
@@ -105,7 +111,6 @@ export async function POST(request: Request) {
     }
 
     // Create pending contribution record
-    const admin = getAdminClient();
     const { data: contribution, error } = await admin
       .from('contributions')
       .insert({

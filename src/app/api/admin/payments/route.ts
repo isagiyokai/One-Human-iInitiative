@@ -64,6 +64,13 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'No campaign found' }, { status: 404 });
     }
 
+    // Explicitly reject the demo wallet values from the seed migration.
+    if (body.bitcoinAddress === 'bc1qexample00000000000000000000000000000000000'
+      || body.solanaAddress === 'SolanaExample1111111111111111111111111111111111'
+      || body.phantomUsername === '@exampleusername') {
+      return NextResponse.json({ error: 'Example payment destinations cannot be saved. Enter your real wallet addresses and Phantom username.' }, { status: 400 });
+    }
+
     // Validate addresses
     if (body.bitcoinAddress && !validateBitcoinAddress(body.bitcoinAddress)) {
       return NextResponse.json({ error: 'Invalid Bitcoin address' }, { status: 400 });

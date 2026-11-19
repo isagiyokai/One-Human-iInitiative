@@ -76,12 +76,20 @@ export async function PATCH(request: Request) {
       if (settingsError || !settings) {
         return NextResponse.json({ error: 'Payment settings must be configured before the campaign can be activated.' }, { status: 400 });
       }
+      const placeholderBitcoin = 'bc1qexample00000000000000000000000000000000000';
+      const placeholderSolana = 'SolanaExample1111111111111111111111111111111111';
+      const placeholderPhantom = '@exampleusername';
+      const hasPlaceholder = settings.bitcoin_address === placeholderBitcoin
+        || settings.solana_address === placeholderSolana
+        || settings.phantom_username === placeholderPhantom;
+
       if (
+        hasPlaceholder ||
         !validateBitcoinAddress(settings.bitcoin_address || '') ||
         !validateSolanaAddress(settings.solana_address || '') ||
         !validatePhantomUsername(settings.phantom_username || '')
       ) {
-        return NextResponse.json({ error: 'Replace the example payment destinations with valid, verified wallet addresses and a real Phantom username before activation.' }, { status: 400 });
+        return NextResponse.json({ error: 'Replace the seeded example payment destinations with real, verified wallet addresses and a real Phantom username before activation.' }, { status: 400 });
       }
     }
 
