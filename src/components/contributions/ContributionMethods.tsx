@@ -143,8 +143,8 @@ export function ContributionMethods() {
             Ways to Contribute
           </h2>
           <p className="mt-4 text-lg text-stone-600 leading-relaxed">
-            Choose the method that works best for you. All contributions are verified manually on-chain.
-            100% of confirmed funds reach the recipient directly.
+            Choose the method that works best for you. Contributions are verified manually on-chain.
+            You do not need to fill in the optional transaction form to contribute.
           </p>
         </header>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
@@ -196,8 +196,8 @@ export function ContributionMethods() {
             Ways to Contribute
           </h2>
           <p className="mt-4 text-lg text-stone-600 leading-relaxed">
-            Choose the method that works best for you. All contributions are verified manually on-chain.
-            100% of confirmed funds reach the recipient directly.
+            Choose the method that works best for you. Contributions are verified manually on-chain.
+            You do not need to fill in the optional transaction form to contribute.
           </p>
         </header>
         {error === 'Campaign not yet active. Please check back later.' ? (
