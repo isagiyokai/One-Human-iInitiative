@@ -10,8 +10,8 @@ interface TimeRemaining {
   seconds: number;
   isExpired: boolean;
   isPaused: boolean;
+  isStarted: boolean;
   totalSeconds: number;
-  isStarted?: boolean;
 }
 
 interface UseCountdownOptions {
@@ -27,10 +27,6 @@ export function useCountdown({
   onExpire,
   intervalMs = 1000,
 }: UseCountdownOptions) {
-  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(() =>
-    calculateTimeRemaining(endTimestamp, status)
-  );
-
   const calculateTimeRemaining = useCallback((
     end: string,
     campaignStatus: CampaignStatus
@@ -38,6 +34,7 @@ export function useCountdown({
     const now = new Date();
     const endDate = new Date(end);
     const diffMs = endDate.getTime() - now.getTime();
+    const isStarted = campaignStatus !== 'draft';
 
     if (campaignStatus === 'paused') {
       return {
@@ -47,11 +44,17 @@ export function useCountdown({
         seconds: 0,
         isExpired: false,
         isPaused: true,
+        isStarted,
         totalSeconds: 0,
       };
     }
 
-    if (diffMs <= 0 || campaignStatus === 'expired' || campaignStatus === 'completed' || campaignStatus === 'target_reached') {
+    if (
+      diffMs <= 0 ||
+      campaignStatus === 'expired' ||
+      campaignStatus === 'completed' ||
+      campaignStatus === 'target_reached'
+    ) {
       return {
         days: 0,
         hours: 0,
@@ -59,6 +62,7 @@ export function useCountdown({
         seconds: 0,
         isExpired: true,
         isPaused: false,
+        isStarted,
         totalSeconds: 0,
       };
     }
@@ -76,16 +80,27 @@ export function useCountdown({
       seconds,
       isExpired: false,
       isPaused: false,
+      isStarted,
       totalSeconds,
     };
   }, []);
 
+  // Define the calculation before the lazy initializer uses it.
+  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(() =>
+    calculateTimeRemaining(endTimestamp, status)
+  );
+
   useEffect(() => {
-    // Initial calculation
     setTimeRemaining(calculateTimeRemaining(endTimestamp, status));
 
-    // Don't start interval if paused, expired, or completed
-    if (status === 'paused' || status === 'expired' || status === 'completed' || status === 'target_reached') {
+    // A draft campaign displays its scheduled start date rather than a running timer.
+    if (
+      status === 'draft' ||
+      status === 'paused' ||
+      status === 'expired' ||
+      status === 'completed' ||
+      status === 'target_reached'
+    ) {
       return;
     }
 
@@ -93,7 +108,6 @@ export function useCountdown({
       const newTime = calculateTimeRemaining(endTimestamp, status);
       setTimeRemaining(newTime);
 
-      // Trigger expire callback when timer reaches 0
       if (newTime.isExpired && !timeRemaining.isExpired) {
         onExpire?.();
       }
