@@ -33,8 +33,6 @@ export const campaignSchema = z.object({
 export const campaignSettingsSchema = z.object({
   bitcoinAddress: z.string().regex(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,59}$/, 'Invalid Bitcoin address'),
   solanaAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, 'Invalid Solana address'),
-  // Phantom usernames: alphanumeric only, 3-30 chars after @, no underscores
-  phantomUsername: z.string().optional().default(''),
   kofiEnabled: z.boolean().optional().default(false),
   kofiUrl: z.string().url().optional().or(z.literal('')).default(''),
   kofiLabel: z.string().max(100).optional().default('Support on Ko-fi'),
