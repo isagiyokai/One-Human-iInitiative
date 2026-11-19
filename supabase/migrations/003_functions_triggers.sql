@@ -76,53 +76,75 @@ BEGIN
     -- Active
     RETURN 'active';
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$ LANGUAGE plpgsql STABLE;
 
 -- ============================================================================
 -- AUTO-UPDATE CAMPAIGN STATUS ON CONTRIBUTION CONFIRMATION
 -- ============================================================================
 CREATE OR REPLACE FUNCTION update_campaign_on_contribution_confirmation()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $
 DECLARE
     v_campaign campaigns%ROWTYPE;
-    v_new_status VARCHAR;
+    v_new_amount DECIMAL(20, 8);
     v_usd_value DECIMAL(18, 2);
 BEGIN
-    -- Only act on status change TO confirmed
-    IF NEW.status = 'confirmed' AND OLD.status = 'pending' THEN
-        -- Get campaign
-        SELECT * INTO v_campaign FROM campaigns WHERE id = NEW.campaign_id;
+    -- Add a contribution exactly once when it becomes confirmed.
+    IF NEW.status = 'confirmed' AND OLD.status <> 'confirmed' THEN
+        IF NEW.usd_value IS NOT NULL THEN
+            v_usd_value := NEW.usd_value;
+        ELSIF UPPER(NEW.currency) = 'USD' THEN
+            v_usd_value := NEW.amount;
+        ELSE
+            RAISE EXCEPTION 'A verified USD value is required before confirming a non-USD contribution';
+        END IF;
 
-        -- Use USD value for campaign totals (fallback to amount if usd_value not set)
-        v_usd_value := COALESCE(NEW.usd_value, NEW.amount);
+        SELECT * INTO v_campaign FROM campaigns WHERE id = NEW.campaign_id FOR UPDATE;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Campaign % was not found', NEW.campaign_id;
+        END IF;
 
-        -- Compute new status
-        v_new_status := compute_campaign_status(
-            v_campaign.status,
-            v_campaign.start_date,
-            v_campaign.end_date,
-            v_campaign.confirmed_amount + v_usd_value,
-            v_campaign.target
-        );
-
-        -- Update campaign
-        UPDATE campaigns SET
-            confirmed_amount = confirmed_amount + v_usd_value,
+        v_new_amount := v_campaign.confirmed_amount + v_usd_value;
+        UPDATE campaigns
+        SET confirmed_amount = v_new_amount,
             confirmed_count = confirmed_count + 1,
-            status = v_new_status,
+            status = compute_campaign_status(
+                v_campaign.status, v_campaign.start_date, v_campaign.end_date,
+                v_new_amount, v_campaign.target
+            ),
             updated_at = NOW()
         WHERE id = NEW.campaign_id;
     END IF;
 
-    -- Handle rejection (no change to campaign totals)
-    IF NEW.status = 'rejected' AND OLD.status = 'pending' THEN
-        -- Just log, no campaign update needed
-        NULL;
+    -- Refunds/reversals remove the previously counted USD value.
+    IF OLD.status = 'confirmed' AND NEW.status IN ('refunded', 'reversed', 'rejected') THEN
+        IF OLD.usd_value IS NOT NULL THEN
+            v_usd_value := OLD.usd_value;
+        ELSIF UPPER(OLD.currency) = 'USD' THEN
+            v_usd_value := OLD.amount;
+        ELSE
+            RAISE EXCEPTION 'The original confirmed contribution has no stored USD value';
+        END IF;
+
+        SELECT * INTO v_campaign FROM campaigns WHERE id = OLD.campaign_id FOR UPDATE;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'Campaign % was not found', OLD.campaign_id;
+        END IF;
+
+        v_new_amount := GREATEST(v_campaign.confirmed_amount - v_usd_value, 0);
+        UPDATE campaigns
+        SET confirmed_amount = v_new_amount,
+            confirmed_count = GREATEST(confirmed_count - 1, 0),
+            status = compute_campaign_status(
+                v_campaign.status, v_campaign.start_date, v_campaign.end_date,
+                v_new_amount, v_campaign.target
+            ),
+            updated_at = NOW()
+        WHERE id = OLD.campaign_id;
     END IF;
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_update_campaign_on_contribution
     AFTER UPDATE ON contributions

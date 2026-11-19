@@ -40,7 +40,7 @@ CHECK (phantom_username ~ '^@[a-zA-Z0-9]{3,30}$');
 
 -- Campaign Progress View (already exists in 003, but we'll recreate with proper security)
 DROP VIEW IF EXISTS campaign_progress_public;
-CREATE VIEW campaign_progress_public AS
+CREATE VIEW campaign_progress_public WITH (security_barrier = true) AS
 SELECT
     c.id,
     c.name,
@@ -62,7 +62,7 @@ WHERE c.status IN ('active', 'paused', 'target_reached', 'expired', 'completed')
 
 -- Public Campaign Settings View (only public-safe fields)
 DROP VIEW IF EXISTS campaign_settings_public;
-CREATE VIEW campaign_settings_public AS
+CREATE VIEW campaign_settings_public WITH (security_barrier = true) AS
 SELECT
     cs.campaign_id,
     cs.bitcoin_address,
@@ -78,7 +78,7 @@ WHERE c.status IN ('active', 'paused', 'target_reached', 'expired', 'completed')
 
 -- Public Expense Summary View (only published expenses)
 DROP VIEW IF EXISTS expense_summary_public;
-CREATE VIEW expense_summary_public AS
+CREATE VIEW expense_summary_public WITH (security_barrier = true) AS
 SELECT
     e.campaign_id,
     e.category,
@@ -93,7 +93,7 @@ GROUP BY e.campaign_id, e.category;
 
 -- Public Contribution Aggregates View (no individual transaction details)
 DROP VIEW IF EXISTS contribution_aggregates_public;
-CREATE VIEW contribution_aggregates_public AS
+CREATE VIEW contribution_aggregates_public WITH (security_barrier = true) AS
 SELECT
     c.campaign_id,
     c.currency,
@@ -110,7 +110,7 @@ GROUP BY c.campaign_id, c.currency;
 
 -- Public Petition Aggregates View
 DROP VIEW IF EXISTS petition_aggregates_public;
-CREATE VIEW petition_aggregates_public AS
+CREATE VIEW petition_aggregates_public WITH (security_barrier = true) AS
 SELECT
     p.id,
     p.campaign_id,
@@ -122,7 +122,7 @@ SELECT
     p.voting_starts_at,
     p.voting_ends_at,
     p.decided_at,
-    p.admin_notes,
+    p.created_at,
     COUNT(v.id) FILTER (WHERE v.choice = 'yes') as yes_votes,
     COUNT(v.id) FILTER (WHERE v.choice = 'no') as no_votes,
     COUNT(v.id) as total_votes
@@ -131,11 +131,11 @@ JOIN campaigns c ON p.campaign_id = c.id
 LEFT JOIN votes v ON v.petition_id = p.id
 WHERE c.status IN ('active', 'paused', 'target_reached', 'expired', 'completed')
   AND p.status IN ('collecting', 'voting', 'approved', 'rejected')
-GROUP BY p.id, p.campaign_id, p.requested_target, p.reason, p.status, p.token_count, p.required_tokens, p.voting_starts_at, p.voting_ends_at, p.decided_at, p.admin_notes;
+GROUP BY p.id, p.campaign_id, p.requested_target, p.reason, p.status, p.token_count, p.required_tokens, p.voting_starts_at, p.voting_ends_at, p.decided_at, p.created_at;
 
 -- Public Updates View
 DROP VIEW IF EXISTS campaign_updates_public;
-CREATE VIEW campaign_updates_public AS
+CREATE VIEW campaign_updates_public WITH (security_barrier = true) AS
 SELECT
     cu.id,
     cu.campaign_id,
@@ -151,7 +151,7 @@ ORDER BY cu.published_at DESC;
 
 -- Public Individual Published Expenses View (for detailed transparency page)
 DROP VIEW IF EXISTS expenses_published_public;
-CREATE VIEW expenses_published_public AS
+CREATE VIEW expenses_published_public WITH (security_barrier = true) AS
 SELECT
     e.id,
     e.campaign_id,
@@ -170,13 +170,13 @@ ORDER BY e.published_at DESC;
 -- ============================================================================
 -- GRANT PERMISSIONS ON PUBLIC VIEWS
 -- ============================================================================
-GRANT SELECT ON campaign_progress_public TO anon, authenticated;
-GRANT SELECT ON campaign_settings_public TO anon, authenticated;
-GRANT SELECT ON expense_summary_public TO anon, authenticated;
-GRANT SELECT ON contribution_aggregates_public TO anon, authenticated;
-GRANT SELECT ON petition_aggregates_public TO anon, authenticated;
-GRANT SELECT ON campaign_updates_public TO anon, authenticated;
-GRANT SELECT ON expenses_published_public TO anon, authenticated;
+GRANT SELECT ON campaign_progress_public TO anon, authenticated, service_role;
+GRANT SELECT ON campaign_settings_public TO anon, authenticated, service_role;
+GRANT SELECT ON expense_summary_public TO anon, authenticated, service_role;
+GRANT SELECT ON contribution_aggregates_public TO anon, authenticated, service_role;
+GRANT SELECT ON petition_aggregates_public TO anon, authenticated, service_role;
+GRANT SELECT ON campaign_updates_public TO anon, authenticated, service_role;
+GRANT SELECT ON expenses_published_public TO anon, authenticated, service_role;
 
 -- ============================================================================
 -- REVOKE DIRECT TABLE ACCESS FROM PUBLIC ROLES
@@ -194,6 +194,12 @@ REVOKE ALL ON campaign_updates FROM anon, authenticated;
 REVOKE ALL ON admin_audit_logs FROM anon, authenticated;
 REVOKE ALL ON repayment_contacts FROM anon, authenticated;
 
+-- A small set of public campaign selector columns is needed by server routes
+-- that use the publishable key. All other campaign/settings columns remain private.
+GRANT SELECT (id, status, target, max_target, created_at) ON campaigns TO anon, authenticated;
+GRANT SELECT (bitcoin_address, solana_address, kofi_enabled, kofi_status)
+  ON campaign_settings TO anon, authenticated;
+
 -- ============================================================================
 -- UPDATE RLS POLICIES - Restrict to only allow access via views
 -- ============================================================================
@@ -204,9 +210,9 @@ DROP POLICY IF EXISTS "Public can view active campaigns" ON campaigns;
 DROP POLICY IF EXISTS "Admins can manage campaigns" ON campaigns;
 
 -- New restrictive policies
-CREATE POLICY "Public can view active campaigns via view only" ON campaigns
+CREATE POLICY "Public can select active campaign metadata" ON campaigns
     FOR SELECT TO anon, authenticated
-    USING (false); -- Force use of campaign_progress_public view instead
+    USING (status IN ('active', 'paused', 'target_reached', 'expired', 'completed'));
 
 CREATE POLICY "Admins can manage campaigns" ON campaigns
     FOR ALL TO service_role
@@ -217,9 +223,15 @@ CREATE POLICY "Admins can manage campaigns" ON campaigns
 DROP POLICY IF EXISTS "Public can view campaign settings" ON campaign_settings;
 DROP POLICY IF EXISTS "Admins can manage campaign settings" ON campaign_settings;
 
-CREATE POLICY "Public can view campaign settings via view only" ON campaign_settings
+CREATE POLICY "Public can select settings for active campaigns" ON campaign_settings
     FOR SELECT TO anon, authenticated
-    USING (false); -- Force use of campaign_settings_public view
+    USING (
+      EXISTS (
+        SELECT 1 FROM campaigns
+        WHERE campaigns.id = campaign_settings.campaign_id
+          AND campaigns.status IN ('active', 'paused', 'target_reached', 'expired', 'completed')
+      )
+    );
 
 CREATE POLICY "Admins can manage campaign settings" ON campaign_settings
     FOR ALL TO service_role
@@ -230,11 +242,6 @@ CREATE POLICY "Admins can manage campaign settings" ON campaign_settings
 DROP POLICY IF EXISTS "Public can view confirmed contributions" ON contributions;
 DROP POLICY IF EXISTS "Admins can manage contributions" ON contributions;
 DROP POLICY IF EXISTS "Public can insert pending contributions" ON contributions;
-
--- Only allow public to INSERT pending contributions (for submission)
-CREATE POLICY "Public can submit pending contributions" ON contributions
-    FOR INSERT TO anon, authenticated
-    WITH CHECK (status = 'pending');
 
 -- Admin full access
 CREATE POLICY "Admins can manage contributions" ON contributions
@@ -264,17 +271,6 @@ CREATE POLICY "Public can view petitions via aggregates view only" ON petitions
     FOR SELECT TO anon, authenticated
     USING (false); -- Force use of petition_aggregates_public view
 
-CREATE POLICY "Public can create petitions (requires 5 tokens)" ON petitions
-    FOR INSERT TO anon, authenticated
-    WITH CHECK (
-        status = 'collecting'
-        AND token_count >= 5
-        AND EXISTS (
-            SELECT 1 FROM browser_participation_tokens bpt
-            WHERE bpt.id = petitions.token_count -- placeholder, actual check in trigger
-        )
-    );
-
 CREATE POLICY "Admins can manage petitions" ON petitions
     FOR ALL TO service_role
     USING (true)
@@ -285,11 +281,6 @@ DROP POLICY IF EXISTS "Public can view votes for petition" ON votes;
 DROP POLICY IF EXISTS "Public can vote" ON votes;
 DROP POLICY IF EXISTS "Admins can view votes" ON votes;
 
--- Only allow public to INSERT votes (for voting)
-CREATE POLICY "Public can submit votes" ON votes
-    FOR INSERT TO anon, authenticated
-    WITH CHECK (true);
-
 -- Admin full access
 CREATE POLICY "Admins can view all votes" ON votes
     FOR SELECT TO service_role
@@ -299,11 +290,6 @@ CREATE POLICY "Admins can view all votes" ON votes
 DROP POLICY IF EXISTS "Public can create browser tokens" ON browser_participation_tokens;
 DROP POLICY IF EXISTS "Public can view own browser token" ON browser_participation_tokens;
 DROP POLICY IF EXISTS "Admins can manage browser tokens" ON browser_participation_tokens;
-
--- Only allow token creation (for participation)
-CREATE POLICY "Public can create browser tokens" ON browser_participation_tokens
-    FOR INSERT TO anon, authenticated
-    WITH CHECK (true);
 
 -- Admin full access
 CREATE POLICY "Admins can manage browser tokens" ON browser_participation_tokens
@@ -328,14 +314,6 @@ CREATE POLICY "Admins can manage updates" ON campaign_updates
 DROP POLICY IF EXISTS "Admins can manage repayment contacts" ON repayment_contacts;
 DROP POLICY IF EXISTS "Supporters can create repayment contacts" ON repayment_contacts;
 DROP POLICY IF EXISTS "Supporters can delete own repayment contacts" ON repayment_contacts;
-
-CREATE POLICY "Supporters can create repayment contacts" ON repayment_contacts
-    FOR INSERT TO anon, authenticated
-    WITH CHECK (consent_given = true);
-
-CREATE POLICY "Supporters can delete own repayment contacts" ON repayment_contacts
-    FOR DELETE TO anon, authenticated
-    USING (true); -- Deletion by contribution_id handled in API
 
 CREATE POLICY "Admins can manage repayment contacts" ON repayment_contacts
     FOR ALL TO service_role
