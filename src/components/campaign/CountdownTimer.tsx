@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -81,7 +82,7 @@ function StatusCard({
   label,
   description,
 }: {
-  children?: React.ReactNode;
+  children?: ReactNode;
   color: 'emerald' | 'red' | 'amber' | 'charcoal';
   label: string;
   description?: string;
