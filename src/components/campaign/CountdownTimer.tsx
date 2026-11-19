@@ -24,7 +24,7 @@ export function CountdownTimer({ endDate, startDate, status }: CountdownTimerPro
   const { days, hours, minutes, seconds, isExpired, isStarted, isPaused } = timeRemaining;
   const isNotStarted = !isStarted;
 
-  if (status === 'draft' || status === 'completed') {
+  if (status === 'completed') {
     return null;
   }
 
