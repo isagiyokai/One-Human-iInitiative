@@ -92,7 +92,7 @@ function getStatusLabel(status: string): string {
     case 'target_reached': return 'Target Reached';
     case 'expired': return 'Campaign Ended';
     case 'completed': return 'Campaign Completed';
-    default: return 'Campaign Active';
+    default: return 'Campaign Not Yet Active';
   }
 }
 
@@ -133,12 +133,16 @@ export default async function HomePage() {
                 {heroTagline}
               </p>
               <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <span className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-charcoal-100 text-charcoal-700 text-sm font-medium transition-colors hover:bg-charcoal-200">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" aria-hidden="true"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" aria-hidden="true"></span>
-                  </span>
-                  {campaign ? getStatusLabel(campaign.computed_status) : 'Campaign Active'}
+                <span className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-charcoal-100 text-charcoal-700 text-sm font-medium">
+                  {campaign?.computed_status === 'active' ? (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" aria-hidden="true"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" aria-hidden="true"></span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex h-2 w-2 rounded-full bg-amber-500" aria-hidden="true"></span>
+                  )}
+                  {campaign ? getStatusLabel(campaign.computed_status) : 'Campaign setup in progress'}
                 </span>
               </div>
             </div>
