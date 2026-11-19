@@ -73,9 +73,30 @@ export async function PATCH(request: Request) {
     }
 
     const validated = campaignSchema.parse(body);
+    const campaignUpdate = {
+      name: validated.name,
+      description: validated.description,
+      target: validated.target,
+      max_target: validated.maxTarget,
+      start_date: validated.startDate,
+      end_date: validated.endDate,
+      status: validated.status,
+      hero_title: validated.heroTitle,
+      hero_tagline: validated.heroTagline,
+      public_content: validated.publicContent ?? null,
+      ...(validated.storyTitle !== undefined ? { story_title: validated.storyTitle } : {}),
+      ...(validated.storyContent !== undefined ? { story_content: validated.storyContent } : {}),
+      ...(validated.privacyTitle !== undefined ? { privacy_title: validated.privacyTitle } : {}),
+      ...(validated.privacyContent !== undefined ? { privacy_content: validated.privacyContent } : {}),
+      ...(validated.processTitle !== undefined ? { process_title: validated.processTitle } : {}),
+      ...(validated.processContent !== undefined ? { process_content: validated.processContent } : {}),
+      ...(validated.customBlocks !== undefined ? { custom_blocks: validated.customBlocks } : {}),
+      updated_at: new Date().toISOString(),
+    };
+
     const { data: updated, error } = await admin
       .from('campaigns')
-      .update({ ...validated, updated_at: new Date().toISOString() })
+      .update(campaignUpdate)
       .eq('id', campaign.id)
       .select()
       .single();

@@ -11,14 +11,22 @@ export async function GET() {
     const { data: campaignProgress, error: progressError } = await supabase
       .from('campaign_progress_public')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('start_date', { ascending: false })
       .limit(1)
       .single();
 
-    if (progressError || !campaignProgress) {
+    if (progressError?.code === 'PGRST116' || !campaignProgress) {
       return NextResponse.json(
-        { error: 'No active campaign found' },
+        { error: 'No active campaign found', code: 'NO_ACTIVE_CAMPAIGN' },
         { status: 404 }
+      );
+    }
+
+    if (progressError) {
+      console.error('Campaign progress view error:', progressError);
+      return NextResponse.json(
+        { error: 'Unable to load campaign data' },
+        { status: 500 }
       );
     }
 

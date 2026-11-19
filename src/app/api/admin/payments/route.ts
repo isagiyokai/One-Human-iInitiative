@@ -76,9 +76,20 @@ export async function PATCH(request: Request) {
     }
 
     const validated = campaignSettingsSchema.parse(body);
+    const settingsUpdate = {
+      bitcoin_address: validated.bitcoinAddress,
+      solana_address: validated.solanaAddress,
+      phantom_username: validated.phantomUsername,
+      kofi_enabled: validated.kofiEnabled,
+      kofi_url: validated.kofiUrl || null,
+      kofi_label: validated.kofiLabel || 'Support on Ko-fi',
+      ...(validated.kofiStatus !== undefined ? { kofi_status: validated.kofiStatus } : {}),
+      updated_at: new Date().toISOString(),
+    };
+
     const { data: updated, error } = await admin
       .from('campaign_settings')
-      .update({ ...validated, updated_at: new Date().toISOString() })
+      .update(settingsUpdate)
       .eq('campaign_id', campaign.id)
       .select()
       .single();

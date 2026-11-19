@@ -79,7 +79,12 @@ export async function POST(request: Request) {
       .from('expenses')
       .insert({
         campaign_id: campaign.id,
-        ...validated,
+        category: validated.category,
+        description: validated.description,
+        amount: validated.amount,
+        currency: validated.currency,
+        status: validated.status,
+        evidence_url: validated.evidenceUrl || null,
         published_at: validated.status === 'published' ? new Date().toISOString() : null,
       })
       .select()
@@ -123,10 +128,16 @@ export async function PATCH(request: Request) {
     }
 
     const validated = expenseSchema.partial().parse(updates);
-    const updateData = {
-      ...validated,
-      published_at: validated.status === 'published' ? new Date().toISOString() :
-                    validated.status === 'draft' ? null : undefined,
+    const updateData: Record<string, unknown> = {
+      ...(validated.category !== undefined ? { category: validated.category } : {}),
+      ...(validated.description !== undefined ? { description: validated.description } : {}),
+      ...(validated.amount !== undefined ? { amount: validated.amount } : {}),
+      ...(validated.currency !== undefined ? { currency: validated.currency } : {}),
+      ...(validated.status !== undefined ? {
+        status: validated.status,
+        published_at: validated.status === 'published' ? new Date().toISOString() : null,
+      } : {}),
+      ...(validated.evidenceUrl !== undefined ? { evidence_url: validated.evidenceUrl || null } : {}),
       updated_at: new Date().toISOString(),
     };
 
