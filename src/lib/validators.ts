@@ -34,19 +34,16 @@ export const campaignSettingsSchema = z.object({
   bitcoinAddress: z.string().regex(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,59}$/, 'Invalid Bitcoin address'),
   solanaAddress: z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/, 'Invalid Solana address'),
   // Phantom usernames: alphanumeric only, 3-30 chars after @, no underscores
-  phantomUsername: z.string().regex(/^@[a-zA-Z0-9]{3,30}$/, 'Invalid Phantom username (must start with @, alphanumeric only, 3-30 chars)'),
-  kofiEnabled: z.boolean(),
-  kofiUrl: z.string().url().optional().or(z.literal('')),
-  kofiLabel: z.string().max(100).optional(),
-  kofiStatus: z.enum(['pending_approval', 'active', 'disabled']).optional(),
-}).refine(data => !data.kofiEnabled || (data.kofiUrl && data.kofiUrl !== ''), {
-  message: 'Ko-fi URL is required when Ko-fi is enabled',
-  path: ['kofiUrl'],
+  phantomUsername: z.string().optional().default(''),
+  kofiEnabled: z.boolean().optional().default(false),
+  kofiUrl: z.string().url().optional().or(z.literal('')).default(''),
+  kofiLabel: z.string().max(100).optional().default('Support on Ko-fi'),
+  kofiStatus: z.enum(['pending_approval', 'active', 'disabled']).optional().default('disabled'),
 });
 
 // Contribution validators
 export const contributionSchema = z.object({
-  paymentMethod: z.enum(['bitcoin', 'solana', 'phantom', 'kofi']),
+  paymentMethod: z.enum(['bitcoin', 'solana']),
   transactionHash: z.string().min(1),
   amount: z.number().positive(),
   currency: z.string().length(3).toUpperCase(),
