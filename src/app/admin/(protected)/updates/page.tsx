@@ -1,7 +1,4 @@
 import { Metadata } from 'next';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { AdminUpdates } from '@/components/admin/AdminUpdates';
 
 export const metadata: Metadata = {
