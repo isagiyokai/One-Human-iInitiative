@@ -11,11 +11,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 interface PaymentSettings {
   bitcoin_address: string;
   solana_address: string;
-  phantom_username: string;
-  kofi_enabled: boolean;
-  kofi_url: string;
-  kofi_label: string;
-  kofi_status: string;
 }
 
 interface ContributionMethod {
@@ -62,68 +57,23 @@ const methodConfigs: Omit<ContributionMethod, 'address' | 'qrCode' | 'enabled' |
     bgColor: 'bg-green-100',
     bgColorLight: 'bg-green-50',
   },
-  {
-    id: 'phantom',
-    name: 'Phantom Username',
-    network: 'Phantom',
-    instructions: 'Open Phantom Wallet, go to Send, enter the username above as the recipient. Supports SOL and SPL tokens.',
-    icon: (
-      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-1-13h2v2h-2zm0 4h2v4h-2z"/>
-      </svg>
-    ),
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
-    bgColorLight: 'bg-purple-50',
-  },
-  {
-    id: 'kofi',
-    name: 'Ko-fi',
-    network: 'Ko-fi',
-    instructions: 'Visit the Ko-fi page to contribute via card, PayPal, or other methods. Ko-fi takes a small platform fee.',
-    icon: (
-      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/>
-      </svg>
-    ),
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
-    bgColorLight: 'bg-gray-50',
-  },
+
 ];
 
 function buildMethods(settings: PaymentSettings): ContributionMethod[] {
-  return methodConfigs.map(config => {
-    if (config.id === 'bitcoin') {
-      return {
-        ...config,
-        address: settings.bitcoin_address,
-        qrCode: `bitcoin:${settings.bitcoin_address}`,
-        enabled: true,
-      };
-    }
-    if (config.id === 'solana') {
-      return {
-        ...config,
-        address: settings.solana_address,
-        qrCode: `solana:${settings.solana_address}`,
-        enabled: true,
-      };
-    }
-    if (config.id === 'phantom') {
-      return {
-        ...config,
-        address: settings.phantom_username,
-        qrCode: `https://phantom.app/ul/${settings.phantom_username.replace('@', '')}`,
-        enabled: true,
-      };
-    }
+  return methodConfigs.map((config) => {
+    const isBitcoin = config.id === 'bitcoin';
+    const address = isBitcoin ? settings.bitcoin_address : settings.solana_address;
     return {
       ...config,
-      address: settings.kofi_url.replace('https://ko-fi.com/', ''),
-      qrCode: settings.kofi_url,
-      enabled: settings.kofi_enabled && settings.kofi_status === 'active',
-      disabledReason: !settings.kofi_enabled ? 'Ko-fi integration not enabled' : settings.kofi_status !== 'active' ? 'Ko-fi integration pending approval. Currently not available.' : undefined,
+      address,
+      qrCode: isBitcoin ? `bitcoin:${address}` : `solana:${address}`,
+      enabled: Boolean(address) && !isPlaceholderAddress(address, config.id),
+      disabledReason: !address
+        ? 'Payment address is not configured'
+        : isPlaceholderAddress(address, config.id)
+          ? 'Payment address is not configured'
+          : undefined,
     };
   });
 }
@@ -132,8 +82,6 @@ function isPlaceholderAddress(address: string, type: string): boolean {
   const placeholders: Record<string, string> = {
     bitcoin: 'bc1qexample',
     solana: 'SolanaExample',
-    phantom: '@exampleusername',
-    kofi: 'exampleusername',
   };
   return address.includes(placeholders[type] || '');
 }
@@ -197,7 +145,7 @@ export function ContributionMethods() {
             100% of confirmed funds reach the recipient directly.
           </p>
         </header>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
           {methodConfigs.map((config) => (
             <Card key={config.id} variant="default" padding="lg" className="relative">
               <CardHeader>
@@ -295,7 +243,7 @@ export function ContributionMethods() {
 
       {/* Tabbed Contribution Methods - Unified Box */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-stone-100 rounded-xl p-1 mb-6" aria-label="Contribution methods">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 bg-stone-100 rounded-xl p-1 mb-6" aria-label="Contribution methods">
           {methods.map((method) => (
             <TabsTrigger
               key={method.id}
@@ -379,7 +327,7 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
           {/* Address/Username */}
           <div>
             <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1.5">
-              {method.id === 'phantom' ? 'Username' : 'Address'}
+              Address
             </label>
             <div className="flex items-center gap-2">
               <code className={`flex-1 text-sm font-mono px-3 py-2 rounded-lg break-all ${
