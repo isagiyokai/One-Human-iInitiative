@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { verifyCredentials, createSession, setSessionCookie, clearSessionCookie } from '@/lib/admin-auth';
+import { verifyCredentials, createSession, setSessionCookie, clearSessionCookie, isAdminAuthConfigured } from '@/lib/admin-auth';
 
 // Rate limiting store (in production, use Redis or similar)
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
-const MAX_ATTEMPTS = 100; // High limit for testing
+const MAX_ATTEMPTS = 10;
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 function checkRateLimit(ip: string): boolean {
@@ -33,6 +33,13 @@ function getClientIP(request: Request): string {
 
 export async function POST(request: Request) {
   try {
+    if (!isAdminAuthConfigured()) {
+      return NextResponse.json(
+        { error: 'Admin sign-in is temporarily unavailable because server configuration is incomplete.' },
+        { status: 503 }
+      );
+    }
+
     const ip = getClientIP(request);
 
     if (!checkRateLimit(ip)) {
@@ -43,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { username, password } = body;
+    const { username, password } = body || {};
 
     if (!username || !password) {
       return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
