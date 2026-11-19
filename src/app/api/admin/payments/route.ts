@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { campaignSettingsSchema } from '@/lib/validators';
-import { validateBitcoinAddress, validateSolanaAddress, validatePhantomUsername } from '@/lib/utils';
+import { validateBitcoinAddress, validateSolanaAddress } from '@/lib/utils';
 import { verifyAdminApiAuth } from '@/lib/admin-api-auth';
 import { z } from 'zod';
 
@@ -66,9 +66,8 @@ export async function PATCH(request: Request) {
 
     // Explicitly reject the demo wallet values from the seed migration.
     if (body.bitcoinAddress === 'bc1qexample00000000000000000000000000000000000'
-      || body.solanaAddress === 'SolanaExample1111111111111111111111111111111111'
-      || body.phantomUsername === '@exampleusername') {
-      return NextResponse.json({ error: 'Example payment destinations cannot be saved. Enter your real wallet addresses and Phantom username.' }, { status: 400 });
+      || body.solanaAddress === 'SolanaExample1111111111111111111111111111111111') {
+      return NextResponse.json({ error: 'Example payment destinations cannot be saved. Enter real wallet addresses.' }, { status: 400 });
     }
 
     // Validate addresses
@@ -77,9 +76,6 @@ export async function PATCH(request: Request) {
     }
     if (body.solanaAddress && !validateSolanaAddress(body.solanaAddress)) {
       return NextResponse.json({ error: 'Invalid Solana address' }, { status: 400 });
-    }
-    if (body.phantomUsername && !validatePhantomUsername(body.phantomUsername)) {
-      return NextResponse.json({ error: 'Invalid Phantom username (must start with @)' }, { status: 400 });
     }
 
     const validated = campaignSettingsSchema.parse(body);
@@ -109,11 +105,6 @@ export async function PATCH(request: Request) {
     const actionMap: Record<string, string> = {
       bitcoinAddress: 'payment.bitcoin_address_updated',
       solanaAddress: 'payment.solana_address_updated',
-      phantomUsername: 'payment.phantom_username_updated',
-      kofiEnabled: 'payment.kofi_settings_updated',
-      kofiUrl: 'payment.kofi_settings_updated',
-      kofiLabel: 'payment.kofi_settings_updated',
-      kofiStatus: 'payment.kofi_settings_updated',
     };
 
     const changedFields = Object.keys(body);
