@@ -52,7 +52,10 @@ export async function GET() {
 
     let totalUsdValue = 0;
     if (!contribError && contribAggregates) {
-      totalUsdValue = contribAggregates.reduce((sum, c) => sum + Number(c.total_usd_value || 0), 0);
+      totalUsdValue = contribAggregates.reduce(
+        (sum: number, item: { total_usd_value?: number | string | null }) => sum + Number(item.total_usd_value || 0),
+        0
+      );
     }
 
     // Get expense summary from secure view

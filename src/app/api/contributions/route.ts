@@ -203,8 +203,14 @@ export async function GET() {
     }
 
     const byCurrency = aggregates || [];
-    const totalConfirmedCount = byCurrency.reduce((sum, c) => sum + c.contribution_count, 0);
-    const totalUsdValue = byCurrency.reduce((sum, c) => sum + Number(c.total_usd_value || 0), 0);
+    const totalConfirmedCount = byCurrency.reduce(
+      (sum: number, item: { contribution_count: number | string }) => sum + Number(item.contribution_count || 0),
+      0
+    );
+    const totalUsdValue = byCurrency.reduce(
+      (sum: number, item: { total_usd_value?: number | string | null }) => sum + Number(item.total_usd_value || 0),
+      0
+    );
 
     return NextResponse.json({
       aggregates: { byCurrency },
