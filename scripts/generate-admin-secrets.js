@@ -1,45 +1,40 @@
 #!/usr/bin/env node
 /**
- * Generate admin password hash and session secret
- * Run with: node scripts/generate-admin-secrets.js
+ * Generate the admin password hash and a new session secret.
+ *
+ * Usage:
+ *   ADMIN_USERNAME=... ADMIN_PASSWORD=... node scripts/generate-admin-secrets.js
+ *
+ * The plaintext password is read from the environment and is never printed.
+ * Do not pass it as a command-line argument or commit it to the repository.
  */
 
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
-const PASSWORD = 'Punalex10k$'; // The user's specified password
-const USERNAME = 'PunahumanGG';
-
 async function generate() {
-  console.log('=== One Human Initiative Admin Secrets Generator ===\n');
+  const username = process.env.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD;
 
-  // Generate password hash
-  const saltRounds = 12;
-  const passwordHash = await bcrypt.hash(PASSWORD, saltRounds);
+  if (!username || !password) {
+    throw new Error('Set ADMIN_USERNAME and ADMIN_PASSWORD in your local environment first.');
+  }
 
-  console.log('Admin Username:', USERNAME);
-  console.log('Admin Password:', PASSWORD);
-  console.log('\n--- Add to .env.local ---\n');
+  if (password.length < 14) {
+    throw new Error('Choose a new, unique admin password with at least 14 characters.');
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const sessionSecret = crypto.randomBytes(48).toString('base64');
+
+  console.log('Add these values to the Vercel Production and Preview environments:');
+  console.log(`ADMIN_USERNAME=${username}`);
   console.log(`ADMIN_PASSWORD_HASH=${passwordHash}`);
-
-  // Generate session secret (32 bytes = 256 bits)
-  const sessionSecret = crypto.randomBytes(32).toString('base64');
   console.log(`ADMIN_SESSION_SECRET=${sessionSecret}`);
-
-  console.log('\n--- Verification ---\n');
-  const isValid = await bcrypt.compare(PASSWORD, passwordHash);
-  console.log('Password hash verification:', isValid ? 'PASS' : 'FAIL');
-
-  console.log('\n=== Instructions ===');
-  console.log('1. Copy the ADMIN_PASSWORD_HASH and ADMIN_SESSION_SECRET to your .env.local');
-  console.log('2. Never commit .env.local to git');
-  console.log('3. In production, set these as environment variables in Vercel/Supabase dashboard');
-  console.log('\nNote: The username "PunahumanGG" is hardcoded in src/lib/admin-auth.ts');
+  console.log('ADMIN_SESSION_MAX_AGE=604800');
 }
 
-// Run if executed directly
-if (require.main === module) {
-  generate().catch(console.error);
-}
-
-module.exports = { generate };
+generate().catch((error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});
