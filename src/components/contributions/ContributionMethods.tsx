@@ -172,6 +172,19 @@ export function ContributionMethods() {
     fetchSettings();
   }, [fetchSettings]);
 
+  const methods = React.useMemo(() => settings ? buildMethods(settings) : [], [settings]);
+  const enabledMethods = methods.filter(m => m.enabled);
+  const firstEnabledId = enabledMethods[0]?.id || methods[0]?.id || 'bitcoin';
+  const [activeTab, setActiveTab] = React.useState<string>('bitcoin');
+
+  // Keep the selected tab valid when payment settings arrive or change.
+  React.useEffect(() => {
+    if (methods.length === 0) return;
+    if (!methods.find(m => m.id === activeTab)?.enabled) {
+      setActiveTab(firstEnabledId);
+    }
+  }, [methods, activeTab, firstEnabledId]);
+
   if (isLoading) {
     return (
       <div className="space-y-8 animate-fade-in">
@@ -260,18 +273,6 @@ export function ContributionMethods() {
       </div>
     );
   }
-
-  const methods = buildMethods(settings);
-  const enabledMethods = methods.filter(m => m.enabled);
-  const firstEnabledId = enabledMethods[0]?.id || methods[0]?.id || 'bitcoin';
-  const [activeTab, setActiveTab] = React.useState<string>(firstEnabledId);
-
-  // Set active tab to first enabled method if current tab is disabled
-  React.useEffect(() => {
-    if (!methods.find(m => m.id === activeTab)?.enabled) {
-      setActiveTab(firstEnabledId);
-    }
-  }, [methods, activeTab, firstEnabledId]);
 
   return (
     <div className="space-y-8 animate-fade-in">
