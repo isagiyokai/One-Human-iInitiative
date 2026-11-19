@@ -82,7 +82,6 @@ export async function PATCH(request: Request) {
     const settingsUpdate = {
       bitcoin_address: validated.bitcoinAddress,
       solana_address: validated.solanaAddress,
-      phantom_username: validated.phantomUsername,
       kofi_enabled: validated.kofiEnabled,
       kofi_url: validated.kofiUrl || null,
       kofi_label: validated.kofiLabel || 'Support on Ko-fi',
