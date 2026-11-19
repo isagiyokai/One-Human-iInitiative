@@ -84,7 +84,8 @@ export function AdminCommunity() {
       if (!response.ok) throw new Error(payload.error || 'Unable to update petition');
       setEditingId(null);
       setAdminNotes('');
-      setMessage({ type: 'success', text: action === 'notes' ? 'Admin notes saved.' : `Petition ${action}d.` });
+      const actionMessage = action === 'notes' ? 'Admin notes saved.' : action === 'approve' ? 'Petition approved.' : action === 'reject' ? 'Petition rejected.' : 'Petition cancelled.';
+      setMessage({ type: 'success', text: actionMessage });
       await loadPetitions();
     } catch (error) {
       setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Unable to update petition' });

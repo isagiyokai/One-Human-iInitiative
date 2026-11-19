@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { repaymentContactSchema } from '@/lib/validators';
 import { validateKoFiUrl, validateBuyMeACoffeeUrl } from '@/lib/utils';
@@ -11,16 +10,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const validated = repaymentContactSchema.parse(body);
-    const supabase = await createClient();
-
-    if (validated.platform === 'ko-fi' && !validateKoFiUrl(validated.url)) {
-      return NextResponse.json({ error: 'Invalid Ko-fi URL' }, { status: 400 });
-    }
-    if (validated.platform === 'buy-me-a-coffee' && !validateBuyMeACoffeeUrl(validated.url)) {
-      return NextResponse.json({ error: 'Invalid Buy Me a Coffee URL' }, { status: 400 });
-    }
-
-    const { data: contribution, error: contribError } = await supabase
+    const admin = getAdminClient();
+    const { data: contribution, error: contribError } = await admin
       .from('contributions')
       .select('id, status')
       .eq('id', validated.contributionId)
@@ -33,32 +24,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Repayment contact can only be added to confirmed contributions' }, { status: 400 });
     }
 
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await admin
       .from('repayment_contacts')
-      .select('id')
+      .select('id, deleted_at')
       .eq('contribution_id', validated.contributionId)
-      .is('deleted_at', null)
       .maybeSingle();
 
-    if (existing) {
+    if (existingError) {
+      console.error('Repayment contact lookup error:', existingError);
+      return NextResponse.json({ error: 'Unable to check existing repayment contact' }, { status: 500 });
+    }
+    if (existing && !existing.deleted_at) {
       return NextResponse.json({ error: 'Repayment contact already exists for this contribution' }, { status: 409 });
     }
 
-    const admin = getAdminClient();
-    const { data: contact, error } = await admin
-      .from('repayment_contacts')
-      .insert({
-        contribution_id: validated.contributionId,
-        platform: validated.platform,
-        url: validated.url,
-        consent_given: validated.consentGiven,
-        consent_at: new Date().toISOString(),
-      })
+    const contactData = {
+      platform: validated.platform,
+      url: validated.url,
+      consent_given: validated.consentGiven,
+      consent_at: new Date().toISOString(),
+      deleted_at: null,
+    };
+
+    const query = existing
+      ? admin.from('repayment_contacts').update(contactData).eq('id', existing.id)
+      : admin.from('repayment_contacts').insert({ ...contactData, contribution_id: validated.contributionId });
+
+    const { data: contact, error } = await query
       .select('id, contribution_id, platform, created_at')
       .single();
 
     if (error) {
-      console.error('Repayment contact insert error:', error);
+      console.error('Repayment contact save error:', error);
       return NextResponse.json({ error: 'Unable to save repayment contact' }, { status: 500 });
     }
 
