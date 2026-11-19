@@ -34,8 +34,8 @@ export default async function AdminLayout({
   return (
     <div className="flex flex-1 min-h-screen bg-stone-50">
       <AdminSidebar navigation={adminNavigation} username={session.username} />
-      <main className="flex-1 lg:ml-64 min-h-screen bg-stone-50">
-        <div className="p-6 lg:p-8">
+      <main className="min-w-0 flex-1 min-h-screen bg-stone-50">
+        <div className="p-6 md:p-8 xl:p-10">
           {children}
         </div>
       </main>
