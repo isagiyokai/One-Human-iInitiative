@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     // Get active campaign
     const { data: campaign } = await supabase
       .from('campaigns')
-      .select('id, status, target')
+      .select('id, status, target, start_date, end_date')
       .in('status', ['active', 'paused', 'target_reached'])
       .order('created_at', { ascending: false })
       .limit(1)
@@ -31,9 +31,18 @@ export async function POST(request: Request) {
     }
 
     // Check if campaign can accept contributions
-    if (campaign.status !== 'active') {
+    const now = Date.now();
+    const startsAt = new Date(campaign.start_date).getTime();
+    const endsAt = new Date(campaign.end_date).getTime();
+    if (
+      campaign.status !== 'active' ||
+      !Number.isFinite(startsAt) ||
+      !Number.isFinite(endsAt) ||
+      now < startsAt ||
+      now > endsAt
+    ) {
       return NextResponse.json(
-        { error: 'Campaign is not accepting contributions at this time' },
+        { error: 'The campaign is not currently accepting contributions.' },
         { status: 400 }
       );
     }
