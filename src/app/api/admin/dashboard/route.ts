@@ -35,21 +35,12 @@ export async function GET() {
       .eq('campaign_id', campaign.id)
       .eq('status', 'pending');
 
-    if (pendingError) {
-      console.error('Pending contributions error:', pendingError);
-    }
-
-    // Get total published expenses
-    const { data: expenses, error: expensesError } = await supabase
+    // Get published expenses and an exact record count
+    const { data: expenses, count: publishedExpenseCount, error: expensesError } = await supabase
       .from('expenses')
-      .select('amount')
+      .select('amount', { count: 'exact' })
       .eq('campaign_id', campaign.id)
       .eq('status', 'published');
-
-    let totalExpenses = 0;
-    if (!expensesError && expenses) {
-      totalExpenses = expenses.reduce((sum: number, e: { amount: string | number }) => sum + Number(e.amount), 0);
-    }
 
     // Get active petitions count
     const { count: petitionsCount, error: petitionsError } = await supabase
@@ -58,9 +49,22 @@ export async function GET() {
       .eq('campaign_id', campaign.id)
       .eq('status', 'voting');
 
-    if (petitionsError) {
-      console.error('Petitions error:', petitionsError);
+    if (pendingError || expensesError || petitionsError) {
+      console.error('Admin dashboard query failed:', {
+        pendingError,
+        expensesError,
+        petitionsError,
+      });
+      return NextResponse.json(
+        { error: 'Unable to load complete dashboard figures. Check the database connection and permissions.' },
+        { status: 500 }
+      );
     }
+
+    const totalExpenses = (expenses || []).reduce(
+      (sum: number, expense: { amount: string | number }) => sum + Number(expense.amount),
+      0
+    );
 
     // Calculate days remaining
     const endDate = new Date(campaign.end_date);
@@ -91,6 +95,7 @@ export async function GET() {
         end_date: campaign.end_date,
         days_remaining: daysRemaining,
         total_expenses: totalExpenses,
+        published_expense_count: publishedExpenseCount || 0,
         pending_contributions: pendingCount || 0,
         active_petitions: petitionsCount || 0,
       },
