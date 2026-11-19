@@ -335,7 +335,7 @@ export function AdminCampaignSettings() {
               <CardContent className="space-y-4">
                 {formData.customBlocks.length === 0 ? (
                   <div className="text-center py-8 text-stone-500">
-                    <p>No story blocks yet. Click "Add Block" to create your first story section.</p>
+                    <p>No story blocks yet. Click &quot;Add Block&quot; to create your first story section.</p>
                   </div>
                 ) : (
                   formData.customBlocks.map((block, index) => (
