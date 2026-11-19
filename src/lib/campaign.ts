@@ -24,11 +24,6 @@ export interface Campaign {
 export interface CampaignSettings {
   bitcoinAddress: string;
   solanaAddress: string;
-  phantomUsername: string;
-  kofiEnabled: boolean;
-  kofiUrl: string;
-  kofiLabel: string;
-  kofiStatus: 'pending_approval' | 'active' | 'disabled';
 }
 
 export function computeCampaignStatus(
@@ -186,10 +181,6 @@ export function formatCampaignForPublic(campaign: Campaign, settings: CampaignSe
     settings: {
       bitcoinAddress: settings.bitcoinAddress,
       solanaAddress: settings.solanaAddress,
-      phantomUsername: settings.phantomUsername,
-      kofiEnabled: settings.kofiEnabled && settings.kofiStatus === 'active',
-      kofiUrl: settings.kofiUrl,
-      kofiLabel: settings.kofiLabel,
     },
   };
 }
