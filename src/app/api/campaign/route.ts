@@ -80,10 +80,6 @@ export async function GET() {
       settings: {
         bitcoin_address: settings.bitcoin_address,
         solana_address: settings.solana_address,
-        phantom_username: settings.phantom_username,
-        kofi_enabled: settings.kofi_enabled && settings.kofi_status === 'active',
-        kofi_url: settings.kofi_url,
-        kofi_label: settings.kofi_label,
       },
       // Story/Content fields for CampaignExplanation
       content: {
