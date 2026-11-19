@@ -56,21 +56,20 @@ const principles = [
 ];
 
 const defaultDescription =
-  'One Human Initiative is a direct, privacy-first campaign to provide financial support to an anonymous individual facing extraordinary circumstances. Every contribution goes directly to the recipient — no platform fees, no intermediaries, no public exposure.';
+  'I am raising funds to secure safe accommodation, cover the initial costs of getting settled, and work toward stable longer-term housing. Contributions go directly to my Bitcoin or Solana wallets and are manually verified.';
 
 const defaultStory =
-  'Behind this campaign is one person — a human being with dreams, struggles, and a story that matters. They\'ve chosen to remain anonymous to protect their privacy and dignity. This isn\'t about publicity or recognition; it\'s about one human helping another.';
+  'I am the person this campaign is for, and I am asking directly for help. I am facing an immediate housing crisis and need support securing somewhere safe to stay, covering essential costs, and getting back on my feet. I have chosen to keep my identity private, but I will share progress updates and publish verified campaign spending as it becomes available.';
 
 const defaultWhyAnonymous =
-  'Anonymity protects the recipient from unwanted attention, harassment, and the complications that come with public fundraising. It also protects contributors — your generosity stays between you and the cause. No names, no tracking, no data harvesting. Just human kindness.';
+  'I have chosen to keep my identity private to protect my personal safety and dignity while asking for help. I will not publish my name or personal details. Contributions will still be recorded, manually verified, and reflected in campaign updates and published spending.';
 
 const defaultHowItWorks =
-  '1. Choose a contribution method (Bitcoin, Solana, Phantom Username, or Ko-fi)\n' +
-  '2. Send your contribution directly to the provided address\n' +
-  '3. Submit the transaction hash for verification\n' +
-  '4. Admin manually verifies on-chain\n' +
-  '5. Once confirmed, your contribution counts toward the target\n' +
-  '6. 100% of confirmed funds go to the recipient';
+  '1. Choose Bitcoin or Solana\n' +
+  '2. Send your contribution to the matching wallet address\n' +
+  '3. Submit the transaction ID or signature and the amount sent\n' +
+  '4. I will have each transaction manually verified on-chain\n' +
+  '5. Confirmed contributions are added to the campaign total and reflected in published updates';
 
 export function CampaignExplanation({
   title = 'Why This Campaign Exists',
@@ -163,9 +162,9 @@ export function CampaignExplanation({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </span>
-                    The Person Behind the Campaign
+                    My Story
                   </CardTitle>
-                  <CardDescription>One human, one story</CardDescription>
+                  <CardDescription>I need help securing a safe place to stay and getting back on my feet.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-stone-600 leading-relaxed text-base">
