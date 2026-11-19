@@ -76,13 +76,13 @@ BEGIN
     -- Active
     RETURN 'active';
 END;
-$ LANGUAGE plpgsql STABLE;
+$$ LANGUAGE plpgsql STABLE;
 
 -- ============================================================================
 -- AUTO-UPDATE CAMPAIGN STATUS ON CONTRIBUTION CONFIRMATION
 -- ============================================================================
 CREATE OR REPLACE FUNCTION update_campaign_on_contribution_confirmation()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$
 DECLARE
     v_campaign campaigns%ROWTYPE;
     v_new_amount DECIMAL(20, 8);
@@ -144,7 +144,7 @@ BEGIN
 
     RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_update_campaign_on_contribution
     AFTER UPDATE ON contributions
