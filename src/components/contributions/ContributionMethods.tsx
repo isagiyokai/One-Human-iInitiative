@@ -250,26 +250,33 @@ export function ContributionMethods() {
             100% of confirmed funds reach the recipient directly.
           </p>
         </header>
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-red-700 mb-4">{error || 'Unable to load contribution methods'}</p>
-          {retryCount < 3 && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setRetryCount(c => c + 1);
-                fetchSettings();
-              }}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Retrying...' : `Retry (${retryCount}/3)`}
-            </Button>
-          )}
-          {retryCount >= 3 && (
-            <p className="text-sm text-stone-500 mt-2">
-              Too many retries. Please refresh the page to try again.
-            </p>
-          )}
-        </div>
+        {error === 'Campaign not yet active. Please check back later.' ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center">
+            <p className="text-base font-semibold text-amber-900 mb-2">The campaign is being prepared</p>
+            <p className="text-amber-800">Contribution options will appear here after the campaign and its payment destinations have been configured and verified. Please do not send funds to unofficial addresses.</p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
+            <p className="text-red-700 mb-4">{error || 'Unable to load contribution methods'}</p>
+            {retryCount < 3 && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRetryCount(c => c + 1);
+                  fetchSettings();
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Retrying...' : `Retry (${retryCount}/3)`}
+              </Button>
+            )}
+            {retryCount >= 3 && (
+              <p className="text-sm text-stone-500 mt-2">
+                Too many retries. Please refresh the page to try again.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     );
   }
