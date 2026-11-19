@@ -238,8 +238,8 @@ export function ContributionMethods() {
           Ways to Contribute
         </h2>
         <p className="mt-4 text-lg text-stone-600 leading-relaxed">
-          Choose the method that works best for you. All contributions are verified manually on-chain.
-          100% of confirmed funds reach the recipient directly.
+          Choose the method that works best for you. Contributions are verified manually on-chain.
+          You do not need to fill in the optional transaction form to contribute.
         </p>
       </header>
 
@@ -278,14 +278,36 @@ export function ContributionMethods() {
             <div>
               <h3 className="font-semibold text-charcoal-900 mb-2">How Verification Works</h3>
               <ul className="text-sm text-stone-600 space-y-1.5 list-disc list-inside leading-relaxed">
-                <li>After sending, copy the transaction hash (TXID)</li>
-                <li>Submit the transaction hash and amount using the form below</li>
-                <li>Admin verifies on-chain within 24 hours</li>
-                <li>Once confirmed, your contribution counts toward the target</li>
-                <li>Duplicate transaction hashes are automatically rejected</li>
+                <li>You can contribute without submitting the form below</li>
+                <li>Optionally share both the amount and transaction ID if you want help matching your transfer</li>
+                <li>I will verify submitted transactions on-chain</li>
+                <li>Confirmed contributions are added to the campaign total</li>
+                <li>Duplicate transaction IDs are automatically rejected</li>
               </ul>
             </div>
           </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 sm:p-8">
+          <h3 className="font-semibold text-charcoal-900">New to crypto? Try Trust Wallet</h3>
+          <p className="mt-2 text-sm text-stone-600 leading-relaxed">
+            Trust Wallet supports Bitcoin and Solana and lets people buy supported crypto through payment
+            providers inside the app. Buying options depend on the country, payment method, and provider;
+            fees are shown before purchase.
+          </p>
+          <a
+            href="https://trustwallet.com/download"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center justify-center rounded-lg bg-charcoal-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-charcoal-800"
+          >
+            Get Trust Wallet
+          </a>
+          <p className="mt-3 text-xs text-stone-500 leading-relaxed">
+            Before sending, select the correct asset and network: Bitcoin (BTC) on the Bitcoin network,
+            or native SOL on Solana. Check the address carefully. Never share your wallet recovery phrase.
+            If buying is not available in your country, use a trusted service supported where you live.
+          </p>
         </div>
       </Tabs>
     </div>
@@ -301,8 +323,28 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
 
   async function handleContributionSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsSubmitting(true);
     setSubmissionMessage(null);
+
+    const cleanAmount = amount.trim();
+    const cleanTransactionHash = transactionHash.trim();
+
+    if (!cleanAmount && !cleanTransactionHash) {
+      setSubmissionMessage({
+        type: 'success',
+        text: 'No details submitted. You can still contribute; this form is optional.',
+      });
+      return;
+    }
+
+    if (!cleanAmount || !cleanTransactionHash) {
+      setSubmissionMessage({
+        type: 'error',
+        text: 'To submit verification details, please provide both the amount and transaction ID. You can also leave both blank and skip this form.',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       if (method.id !== 'bitcoin' && method.id !== 'solana') {
@@ -314,8 +356,8 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentMethod: method.id,
-          transactionHash: transactionHash.trim(),
-          amount: Number(amount),
+          transactionHash: cleanTransactionHash,
+          amount: Number(cleanAmount),
           currency: method.network,
         }),
       });
@@ -420,18 +462,21 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
           {method.enabled && !isPlaceholder && (
             <form onSubmit={handleContributionSubmit} className="space-y-4 border-t border-stone-200 pt-5">
               <div>
-                <h3 className="font-semibold text-charcoal-900">Submit your transaction</h3>
-                <p className="mt-1 text-sm text-stone-600">After your transaction is visible on the network, submit its transaction ID and the amount sent. An administrator will verify it manually.</p>
+                <h3 className="font-semibold text-charcoal-900">Optional transaction details</h3>
+                <p className="mt-1 text-sm text-stone-600">
+                  You do not have to enter an amount or transaction ID to contribute. This form is only here
+                  if you want to help me identify a transfer you have already made. You can leave both fields
+                  blank and skip it. If you choose to submit details, please provide both.
+                </p>
               </div>
               <div>
-                <label htmlFor={`${method.id}-amount`} className="mb-1.5 block text-sm font-medium text-charcoal-900">Amount ({method.network})</label>
+                <label htmlFor={`${method.id}-amount`} className="mb-1.5 block text-sm font-medium text-charcoal-900">Amount ({method.network}) — optional</label>
                 <input
                   id={`${method.id}-amount`}
                   type="number"
                   inputMode="decimal"
                   min="0"
                   step={method.network === 'BTC' ? '0.00000001' : '0.000000001'}
-                  required
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
                   disabled={isSubmitting}
@@ -440,10 +485,9 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
                 />
               </div>
               <div>
-                <label htmlFor={`${method.id}-transaction-hash`} className="mb-1.5 block text-sm font-medium text-charcoal-900">Transaction ID</label>
+                <label htmlFor={`${method.id}-transaction-hash`} className="mb-1.5 block text-sm font-medium text-charcoal-900">Transaction ID — optional</label>
                 <textarea
                   id={`${method.id}-transaction-hash`}
-                  required
                   rows={3}
                   value={transactionHash}
                   onChange={(event) => setTransactionHash(event.target.value.trim())}
@@ -460,7 +504,7 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
                 </p>
               )}
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Submitting...' : 'Submit transaction for verification'}
+                {isSubmitting ? 'Submitting...' : 'Submit optional details for verification'}
               </Button>
             </form>
           )}
