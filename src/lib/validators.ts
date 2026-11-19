@@ -12,6 +12,19 @@ export const campaignSchema = z.object({
   heroTitle: z.string().min(1).max(200),
   heroTagline: z.string().min(1).max(500),
   publicContent: z.string().max(10000).optional(),
+  // Story/Content fields for CampaignExplanation
+  storyTitle: z.string().min(1).max(200).optional(),
+  storyContent: z.string().max(10000).optional(),
+  privacyTitle: z.string().min(1).max(200).optional(),
+  privacyContent: z.string().max(10000).optional(),
+  processTitle: z.string().min(1).max(200).optional(),
+  processContent: z.string().max(10000).optional(),
+  customBlocks: z.array(z.object({
+    id: z.string(),
+    title: z.string().optional(),
+    content: z.string().optional(),
+    type: z.string().optional(),
+  })).optional(),
 }).refine(data => data.target <= data.maxTarget, {
   message: 'Target cannot exceed maximum target',
   path: ['target'],

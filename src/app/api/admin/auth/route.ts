@@ -1,13 +1,47 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { verifyCredentials, createSession, setSessionCookie, clearSessionCookie } from '@/lib/admin-auth';
 
-const ADMIN_USERNAME = 'PunahumanGG';
-const ADMIN_PASSWORD = 'Punalex10k$';
-const SESSION_COOKIE_NAME = 'admin_session';
-const SESSION_DURATION = 60 * 60 * 24 * 7; // 7 days in seconds
+// Rate limiting store (in production, use Redis or similar)
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const MAX_ATTEMPTS = 100; // High limit for testing
+const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+
+  if (!record || now > record.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return true;
+  }
+
+  if (record.count >= MAX_ATTEMPTS) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
+function getClientIP(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return request.headers.get('x-real-ip') || 'unknown';
+}
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIP(request);
+
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { username, password } = body;
 
@@ -15,36 +49,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
     }
 
-    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    const isValid = await verifyCredentials(username, password);
+
+    if (!isValid) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    const session = {
-      username,
-      expiresAt: Date.now() + SESSION_DURATION * 1000,
-    };
-
-    const sessionData = Buffer.from(JSON.stringify(session)).toString('base64');
-
-    const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE_NAME, sessionData, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: SESSION_DURATION,
-      path: '/',
-    });
+    const token = await createSession(username);
+    await setSessionCookie(token);
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error('Admin auth error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 export async function DELETE() {
   try {
-    const cookieStore = await cookies();
-    cookieStore.delete(SESSION_COOKIE_NAME);
+    await clearSessionCookie();
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

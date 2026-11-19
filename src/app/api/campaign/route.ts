@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    // Get campaign progress from secure view
+    // Get campaign progress from secure view (now includes story/content fields)
     const { data: campaignProgress, error: progressError } = await supabase
       .from('campaign_progress_public')
       .select('*')
@@ -22,7 +22,7 @@ export async function GET() {
       );
     }
 
-    // Get campaign settings from secure view
+    // Get campaign settings from secure view (payment addresses)
     const { data: settings, error: settingsError } = await supabase
       .from('campaign_settings_public')
       .select('*')
@@ -73,6 +73,19 @@ export async function GET() {
         kofi_enabled: settings.kofi_enabled && settings.kofi_status === 'active',
         kofi_url: settings.kofi_url,
         kofi_label: settings.kofi_label,
+      },
+      // Story/Content fields for CampaignExplanation
+      content: {
+        hero_title: campaignProgress.hero_title,
+        hero_tagline: campaignProgress.hero_tagline,
+        public_content: campaignProgress.public_content,
+        story_title: campaignProgress.story_title,
+        story_content: campaignProgress.story_content,
+        privacy_title: campaignProgress.privacy_title,
+        privacy_content: campaignProgress.privacy_content,
+        process_title: campaignProgress.process_title,
+        process_content: campaignProgress.process_content,
+        custom_blocks: campaignProgress.custom_blocks || [],
       },
     });
   } catch (error) {

@@ -1,6 +1,27 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
 
 const SESSION_COOKIE_NAME = 'admin_session';
+const SESSION_SECRET = new TextEncoder().encode(process.env.ADMIN_SESSION_SECRET!);
+
+interface AdminSession {
+  username: string;
+  iat: number;
+  exp: number;
+}
+
+async function verifySession(token: string): Promise<AdminSession | null> {
+  try {
+    const { payload } = await jwtVerify(token, SESSION_SECRET);
+    return {
+      username: payload.username as string,
+      iat: payload.iat as number,
+      exp: payload.exp as number,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
   // Check for admin session cookie
@@ -8,13 +29,9 @@ export async function middleware(request: NextRequest) {
   let isAuthenticated = false;
 
   if (sessionCookie?.value) {
-    try {
-      const session = JSON.parse(Buffer.from(sessionCookie.value, 'base64').toString());
-      if (session.expiresAt > Date.now()) {
-        isAuthenticated = true;
-      }
-    } catch {
-      // Invalid session cookie
+    const session = await verifySession(sessionCookie.value);
+    if (session) {
+      isAuthenticated = true;
     }
   }
 

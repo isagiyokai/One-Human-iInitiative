@@ -1,76 +1,77 @@
-'use server';
-
+import { SignJWT, jwtVerify } from 'jose';
+import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
-// Hardcoded admin credentials
 const ADMIN_USERNAME = 'PunahumanGG';
-const ADMIN_PASSWORD = 'Punalex10k$';
-const SESSION_COOKIE_NAME = 'admin_session';
-const SESSION_DURATION = 60 * 60 * 24 * 7; // 7 days in seconds
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH!;
+const SESSION_SECRET = new TextEncoder().encode(process.env.ADMIN_SESSION_SECRET!);
+const SESSION_MAX_AGE = parseInt(process.env.ADMIN_SESSION_MAX_AGE || '604800', 10); // 7 days default
+const COOKIE_NAME = 'admin_session';
 
-export interface AdminSession {
+interface AdminSession {
   username: string;
-  expiresAt: number;
+  iat: number;
+  exp: number;
 }
 
 export async function verifyCredentials(username: string, password: string): Promise<boolean> {
-  return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+  if (username !== ADMIN_USERNAME) {
+    return false;
+  }
+  if (!ADMIN_PASSWORD_HASH) {
+    throw new Error('ADMIN_PASSWORD_HASH not configured');
+  }
+  return bcrypt.compare(password, ADMIN_PASSWORD_HASH);
 }
 
 export async function createSession(username: string): Promise<string> {
-  const session: AdminSession = {
-    username,
-    expiresAt: Date.now() + SESSION_DURATION * 1000,
-  };
-
-  const sessionData = Buffer.from(JSON.stringify(session)).toString('base64');
-
-  const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, sessionData, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: SESSION_DURATION,
-    path: '/',
-  });
-
-  return sessionData;
+  const now = Math.floor(Date.now() / 1000);
+  const token = await new SignJWT({ username })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt(now)
+    .setExpirationTime(now + SESSION_MAX_AGE)
+    .sign(SESSION_SECRET);
+  return token;
 }
 
-export async function getSession(): Promise<AdminSession | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
-
-  if (!sessionCookie?.value) {
-    return null;
-  }
-
+export async function verifySession(token: string): Promise<AdminSession | null> {
   try {
-    const session: AdminSession = JSON.parse(Buffer.from(sessionCookie.value, 'base64').toString());
-
-    if (session.expiresAt < Date.now()) {
-      await destroySession();
-      return null;
-    }
-
-    return session;
+    const { payload } = await jwtVerify(token, SESSION_SECRET);
+    return {
+      username: payload.username as string,
+      iat: payload.iat as number,
+      exp: payload.exp as number,
+    };
   } catch {
     return null;
   }
 }
 
-export async function destroySession(): Promise<void> {
+export async function getAdminSession(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE_NAME);
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+  return verifySession(token);
 }
 
-export async function requireAdmin(): Promise<AdminSession> {
-  const session = await getSession();
+export async function setSessionCookie(token: string): Promise<void> {
+  const cookieStore = await cookies();
+  // WebKit requires non-secure cookies on localhost for cookie persistence
+  // Since we're testing on localhost, always use secure: false
+  cookieStore.set(COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    maxAge: SESSION_MAX_AGE,
+    path: '/',
+  });
+}
 
-  if (!session) {
-    redirect('/admin/login');
-  }
+export async function clearSessionCookie(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(COOKIE_NAME);
+}
 
-  return session;
+export function isValidUsername(username: string): boolean {
+  return username === ADMIN_USERNAME;
 }

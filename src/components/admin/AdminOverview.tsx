@@ -3,30 +3,32 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { Progress } from '@/components/ui/Progress';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 
-interface OverviewStats {
-  totalRaised: number;
-  target: number;
-  contributorCount: number;
-  pendingContributions: number;
-  totalExpenses: number;
-  activePetitions: number;
-  daysRemaining: number;
-  campaignStatus: string;
+interface DashboardData {
+  campaign: {
+    id: string;
+    name: string;
+    target: number;
+    max_target: number;
+    confirmed_amount: number;
+    confirmed_count: number;
+    status: string;
+    computed_status: string;
+    start_date: string;
+    end_date: string;
+    days_remaining: number;
+    total_expenses: number;
+    pending_contributions: number;
+    active_petitions: number;
+  };
 }
 
-const mockStats: OverviewStats = {
-  totalRaised: 25750,
-  target: 10000,
-  contributorCount: 142,
-  pendingContributions: 8,
-  totalExpenses: 8420,
-  activePetitions: 1,
-  daysRemaining: 18,
-  campaignStatus: 'active',
-};
+interface AdminOverviewProps {
+  initialData?: DashboardData;
+}
 
 const statusConfig = {
   draft: { label: 'Draft', variant: 'default' as const },
@@ -37,10 +39,99 @@ const statusConfig = {
   completed: { label: 'Completed', variant: 'default' as const },
 };
 
-export function AdminOverview() {
-  const stats = mockStats;
-  const { label: statusLabel, variant: statusVariant } = statusConfig[stats.campaignStatus as keyof typeof statusConfig] || statusConfig.active;
-  const percentage = stats.target > 0 ? Math.min((stats.totalRaised / stats.target) * 100, 100) : 0;
+export function AdminOverview({ initialData }: AdminOverviewProps) {
+  const [data, setData] = React.useState<DashboardData | null>(initialData || null);
+  const [isLoading, setIsLoading] = React.useState(!initialData);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (initialData) return;
+
+    async function fetchData() {
+      try {
+        const res = await fetch('/api/admin/dashboard');
+        if (!res.ok) throw new Error('Failed to load dashboard data');
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
+  }, [initialData]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal-900">Dashboard</h1>
+            <p className="mt-1 text-stone-600">Campaign overview and quick actions</p>
+          </div>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} variant="default" padding="lg">
+              <CardContent className="space-y-3">
+                <div className="h-5 bg-stone-200 animate-pulse rounded w-3/4" />
+                <div className="h-10 bg-stone-200 animate-pulse rounded w-full" />
+                <div className="h-4 bg-stone-200 animate-pulse rounded w-1/2" />
+                <div className="h-3 bg-stone-200 animate-pulse rounded w-1/3" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card variant="default" padding="lg">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Campaign Progress
+                <div className="h-5 bg-stone-200 animate-pulse rounded w-20" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="h-6 bg-stone-200 animate-pulse rounded" />
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-20 bg-stone-200 animate-pulse rounded" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card variant="default" padding="lg">
+            <CardHeader>
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-12 bg-stone-200 animate-pulse rounded" />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
+          <p className="text-red-700">{error || 'Failed to load dashboard data'}</p>
+          <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const campaign = data.campaign;
+  const { label: statusLabel, variant: statusVariant } = statusConfig[campaign.computed_status as keyof typeof statusConfig] || statusConfig.active;
+  const percentage = campaign.target > 0 ? Math.min((campaign.confirmed_amount / campaign.target) * 100, 100) : 0;
+  const isTargetReached = campaign.computed_status === 'target_reached' || campaign.confirmed_amount >= campaign.target;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -61,19 +152,19 @@ export function AdminOverview() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Raised"
-          value={formatCurrency(stats.totalRaised)}
-          description={`Target: ${formatCurrency(stats.target)}`}
+          value={formatCurrency(campaign.confirmed_amount)}
+          description={`Target: ${formatCurrency(campaign.target)}`}
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           }
           color="emerald"
-          trend={`+${formatNumber(stats.contributorCount)} contributors`}
+          trend={`+${formatNumber(campaign.confirmed_count)} contributors`}
         />
         <StatCard
           title="Pending Verification"
-          value={formatNumber(stats.pendingContributions)}
+          value={formatNumber(campaign.pending_contributions)}
           description="Awaiting admin review"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -81,12 +172,12 @@ export function AdminOverview() {
             </svg>
           }
           color="amber"
-          trend="Requires action"
+          trend={campaign.pending_contributions > 0 ? 'Requires action' : 'All caught up'}
         />
         <StatCard
           title="Published Expenses"
-          value={formatCurrency(stats.totalExpenses)}
-          description={`${((stats.totalExpenses / stats.totalRaised) * 100).toFixed(1)}% of funds`}
+          value={formatCurrency(campaign.total_expenses)}
+          description={`${campaign.confirmed_amount > 0 ? ((campaign.total_expenses / campaign.confirmed_amount) * 100).toFixed(1) : '0.0'}% of funds`}
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -97,7 +188,7 @@ export function AdminOverview() {
         />
         <StatCard
           title="Days Remaining"
-          value={stats.daysRemaining.toString()}
+          value={campaign.days_remaining.toString()}
           description="Campaign expires in"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -105,7 +196,7 @@ export function AdminOverview() {
             </svg>
           }
           color="blue"
-          trend={stats.daysRemaining <= 7 ? 'Urgent!' : 'On track'}
+          trend={campaign.days_remaining <= 7 ? 'Urgent!' : 'On track'}
         />
       </div>
 
@@ -116,31 +207,31 @@ export function AdminOverview() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Campaign Progress
-              <Badge variant={percentage >= 100 ? 'success' : 'default'} size="sm">
+              <Badge variant={isTargetReached ? 'success' : 'default'} size="sm">
                 {percentage.toFixed(1)}%
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             <Progress
-              value={stats.totalRaised}
-              max={stats.target}
+              value={campaign.confirmed_amount}
+              max={campaign.target}
               showLabel
-              label={`Raised ${formatCurrency(stats.totalRaised)} of ${formatCurrency(stats.target)}`}
+              label={`Raised ${formatCurrency(campaign.confirmed_amount)} of ${formatCurrency(campaign.target)}`}
               size="lg"
-              variant={percentage >= 100 ? 'success' : 'default'}
+              variant={isTargetReached ? 'success' : 'default'}
             />
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="p-4 rounded-xl bg-stone-50 text-center">
-                <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{formatNumber(stats.contributorCount)}</div>
+                <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{formatNumber(campaign.confirmed_count)}</div>
                 <div className="text-xs text-stone-500 mt-1">Contributors</div>
               </div>
               <div className="p-4 rounded-xl bg-stone-50 text-center">
-                <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{formatCurrency(stats.target - stats.totalRaised)}</div>
-                <div className="text-xs text-stone-500 mt-1">To Target</div>
+                <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{formatCurrency(campaign.target - campaign.confirmed_amount)}</div>
+                <div className="text-xs text-stone-500 mt-1">{isTargetReached ? 'Target Reached!' : 'To Target'}</div>
               </div>
               <div className="p-4 rounded-xl bg-stone-50 text-center">
-                <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{formatCurrency(stats.totalRaised - stats.totalExpenses)}</div>
+                <div className="text-3xl font-bold text-charcoal-900 tabular-nums">{formatCurrency(campaign.confirmed_amount - campaign.total_expenses)}</div>
                 <div className="text-xs text-stone-500 mt-1">Available</div>
               </div>
             </div>
@@ -161,8 +252,8 @@ export function AdminOverview() {
                 </svg>
               }
               title="Verify Contributions"
-              description={`${stats.pendingContributions} pending verification`}
-              badge={stats.pendingContributions > 0 ? stats.pendingContributions.toString() : undefined}
+              description={`${campaign.pending_contributions} pending verification`}
+              badge={campaign.pending_contributions > 0 ? campaign.pending_contributions.toString() : undefined}
               badgeVariant="warning"
             />
             <QuickActionLink
@@ -183,8 +274,8 @@ export function AdminOverview() {
                 </svg>
               }
               title="Review Petitions"
-              description={`${stats.activePetitions} active petition(s)`}
-              badge={stats.activePetitions > 0 ? stats.activePetitions.toString() : undefined}
+              description={`${campaign.active_petitions} active petition(s)`}
+              badge={campaign.active_petitions > 0 ? campaign.active_petitions.toString() : undefined}
               badgeVariant="info"
             />
             <QuickActionLink
@@ -228,15 +319,34 @@ export function AdminOverview() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {[
-              { action: 'Contribution verified', detail: 'BTC transaction abc123... confirmed', time: '2 hours ago', type: 'success' as const },
-              { action: 'Expense published', detail: 'Medical: Follow-up appointment - $850', time: '5 hours ago', type: 'info' as const },
-              { action: 'Petition created', detail: 'Increase target to $35,000', time: '1 day ago', type: 'warning' as const },
-              { action: 'Update published', detail: 'Monthly expense report - January 2024', time: '2 days ago', type: 'default' as const },
-              { action: 'Payment method updated', detail: 'Solana address changed', time: '3 days ago', type: 'info' as const },
-            ].map((activity, index) => (
-              <ActivityRow key={index} {...activity} />
-            ))}
+            <ActivityRow
+              action="Dashboard loaded"
+              detail="Real-time data from database"
+              time="Just now"
+              type="info"
+            />
+            <ActivityRow
+              action="Campaign status"
+              detail={`Current: ${statusLabel} (${percentage.toFixed(1)}% funded)`}
+              time="Live"
+              type={isTargetReached ? 'success' : 'default'}
+            />
+            {campaign.pending_contributions > 0 && (
+              <ActivityRow
+                action="Pending contributions"
+                detail={`${campaign.pending_contributions} awaiting verification`}
+                time="Now"
+                type="warning"
+              />
+            )}
+            {campaign.active_petitions > 0 && (
+              <ActivityRow
+                action="Active petitions"
+                detail={`${campaign.active_petitions} petition(s) in voting`}
+                time="Now"
+                type="info"
+              />
+            )}
           </div>
         </CardContent>
       </Card>

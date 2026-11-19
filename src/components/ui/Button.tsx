@@ -1,22 +1,32 @@
 'use client';
 
 import React from 'react';
+import { animate, useMotionValue, useSpring, useTransform } from 'motion/react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'outline' | 'ghost' | 'success' | 'error';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
+  haptic?: boolean;
+  whileTap?: { scale?: number };
 }
 
 export function Button({
   variant = 'default',
   size = 'md',
   loading = false,
+  haptic = true,
   className = '',
   disabled,
   children,
+  onClick,
   ...props
 }: ButtonProps) {
+  const scale = useMotionValue(1);
+  const tapScale = useMotionValue(1);
+  const isPressed = useMotionValue(false);
+  const reducedMotion = useReducedMotion();
+
   const variantStyles = {
     default: 'bg-charcoal-900 text-white hover:bg-charcoal-800 active:bg-charcoal-950 focus:ring-charcoal-500',
     outline: 'bg-transparent border-2 border-charcoal-900 text-charcoal-900 hover:bg-stone-50 active:bg-stone-100 focus:ring-charcoal-500',
@@ -33,11 +43,38 @@ export function Button({
 
   const isDisabled = disabled || loading;
 
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (isDisabled) return;
+    if (haptic && 'vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+    isPressed.set(true);
+    if (!reducedMotion) {
+      animate(tapScale, 0.96, { type: 'spring', stiffness: 400, damping: 20 });
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (isDisabled) return;
+    isPressed.set(false);
+    if (!reducedMotion) {
+      animate(tapScale, 1, { type: 'spring', stiffness: 300, damping: 25 });
+    }
+  };
+
+  const handlePointerLeave = () => {
+    if (isDisabled) return;
+    isPressed.set(false);
+    if (!reducedMotion) {
+      animate(tapScale, 1, { type: 'spring', stiffness: 300, damping: 25 });
+    }
+  };
+
   return (
     <button
       className={`
         inline-flex items-center justify-center font-medium rounded-lg
-        transition-all duration-200 ease-out
+        transition-colors duration-150 ease-out
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
         disabled:opacity-50 disabled:cursor-not-allowed
         active:scale-[0.98]
@@ -45,6 +82,10 @@ export function Button({
       `}
       disabled={isDisabled}
       aria-busy={loading}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerLeave}
+      onClick={onClick}
       {...props}
     >
       {loading && (
@@ -56,4 +97,16 @@ export function Button({
       {children}
     </button>
   );
+}
+
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = React.useState(false);
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+  return reduced;
 }

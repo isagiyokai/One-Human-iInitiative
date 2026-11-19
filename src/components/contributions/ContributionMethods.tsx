@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { QRCodeComponent as QRCode } from '@/components/ui/QRCode';
 import { CopyToClipboard } from './CopyToClipboard';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 
 interface PaymentSettings {
   bitcoin_address: string;
@@ -29,6 +30,7 @@ interface ContributionMethod {
   icon: React.ReactNode;
   color: string;
   bgColor: string;
+  bgColorLight: string;
 }
 
 const methodConfigs: Omit<ContributionMethod, 'address' | 'qrCode' | 'enabled' | 'disabledReason'>[] = [
@@ -44,6 +46,7 @@ const methodConfigs: Omit<ContributionMethod, 'address' | 'qrCode' | 'enabled' |
     ),
     color: 'text-amber-600',
     bgColor: 'bg-amber-100',
+    bgColorLight: 'bg-amber-50',
   },
   {
     id: 'solana',
@@ -57,6 +60,7 @@ const methodConfigs: Omit<ContributionMethod, 'address' | 'qrCode' | 'enabled' |
     ),
     color: 'text-green-600',
     bgColor: 'bg-green-100',
+    bgColorLight: 'bg-green-50',
   },
   {
     id: 'phantom',
@@ -70,6 +74,7 @@ const methodConfigs: Omit<ContributionMethod, 'address' | 'qrCode' | 'enabled' |
     ),
     color: 'text-purple-600',
     bgColor: 'bg-purple-100',
+    bgColorLight: 'bg-purple-50',
   },
   {
     id: 'kofi',
@@ -83,6 +88,7 @@ const methodConfigs: Omit<ContributionMethod, 'address' | 'qrCode' | 'enabled' |
     ),
     color: 'text-gray-600',
     bgColor: 'bg-gray-100',
+    bgColorLight: 'bg-gray-50',
   },
 ];
 
@@ -122,27 +128,49 @@ function buildMethods(settings: PaymentSettings): ContributionMethod[] {
   });
 }
 
+function isPlaceholderAddress(address: string, type: string): boolean {
+  const placeholders: Record<string, string> = {
+    bitcoin: 'bc1qexample',
+    solana: 'SolanaExample',
+    phantom: '@exampleusername',
+    kofi: 'exampleusername',
+  };
+  return address.includes(placeholders[type] || '');
+}
+
 export function ContributionMethods() {
   const [settings, setSettings] = React.useState<PaymentSettings | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [retryCount, setRetryCount] = React.useState(0);
+
+  const fetchSettings = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/campaign');
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error('Campaign not yet active. Please check back later.');
+        }
+        throw new Error('Failed to load payment settings');
+      }
+      const data = await res.json();
+      // Handle both old and new API response structures
+      setSettings(data.settings || data.content);
+      setRetryCount(0);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to load contribution methods. Please try again later.';
+      setError(message);
+      console.error('Failed to fetch payment settings:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
-    async function fetchSettings() {
-      try {
-        const res = await fetch('/api/campaign');
-        if (!res.ok) throw new Error('Failed to load payment settings');
-        const data = await res.json();
-        setSettings(data.settings);
-      } catch (err) {
-        setError('Unable to load contribution methods. Please try again later.');
-        console.error('Failed to fetch payment settings:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
     fetchSettings();
-  }, []);
+  }, [fetchSettings]);
 
   if (isLoading) {
     return (
@@ -210,13 +238,40 @@ export function ContributionMethods() {
           </p>
         </header>
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-red-700">{error || 'Unable to load contribution methods'}</p>
+          <p className="text-red-700 mb-4">{error || 'Unable to load contribution methods'}</p>
+          {retryCount < 3 && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRetryCount(c => c + 1);
+                fetchSettings();
+              }}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Retrying...' : `Retry (${retryCount}/3)`}
+            </Button>
+          )}
+          {retryCount >= 3 && (
+            <p className="text-sm text-stone-500 mt-2">
+              Too many retries. Please refresh the page to try again.
+            </p>
+          )}
         </div>
       </div>
     );
   }
 
   const methods = buildMethods(settings);
+  const enabledMethods = methods.filter(m => m.enabled);
+  const firstEnabledId = enabledMethods[0]?.id || methods[0]?.id || 'bitcoin';
+  const [activeTab, setActiveTab] = React.useState<string>(firstEnabledId);
+
+  // Set active tab to first enabled method if current tab is disabled
+  React.useEffect(() => {
+    if (!methods.find(m => m.id === activeTab)?.enabled) {
+      setActiveTab(firstEnabledId);
+    }
+  }, [methods, activeTab, firstEnabledId]);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -230,117 +285,146 @@ export function ContributionMethods() {
         </p>
       </header>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {methods.map((method) => (
-          <ContributionMethodCard key={method.id} method={method} />
-        ))}
-      </div>
+      {/* Tabbed Contribution Methods - Unified Box */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-stone-100 rounded-xl p-1 mb-6" aria-label="Contribution methods">
+          {methods.map((method) => (
+            <TabsTrigger
+              key={method.id}
+              value={method.id}
+              disabled={!method.enabled}
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed"
+            >
+              <span className="flex items-center justify-center gap-2">
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${method.bgColor} ${method.color}`}>
+                  {method.icon}
+                </span>
+                <span className="hidden sm:inline font-medium">{method.name}</span>
+              </span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      {/* Verification Notice */}
-      <div className="rounded-2xl border border-stone-200 bg-warm-white p-6 sm:p-8 animate-slide-up">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-charcoal-100 flex items-center justify-center">
-            <svg className="w-5 h-5 text-charcoal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="font-semibold text-charcoal-900 mb-2">How Verification Works</h3>
-            <ul className="text-sm text-stone-600 space-y-1.5 list-disc list-inside leading-relaxed">
-              <li>After sending, copy the transaction hash (TXID)</li>
-              <li>Submit it via the contribution form (coming soon)</li>
-              <li>Admin verifies on-chain within 24 hours</li>
-              <li>Once confirmed, your contribution counts toward the target</li>
-              <li>Duplicate transaction hashes are automatically rejected</li>
-            </ul>
+        {methods.map((method) => (
+          <ContributionMethodTab key={method.id} method={method} />
+        ))}
+
+        {/* Verification Notice - outside tabs but within section */}
+        <div className="mt-6 rounded-2xl border border-stone-200 bg-warm-white p-6 sm:p-8 animate-slide-up">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-charcoal-100 flex items-center justify-center">
+              <svg className="w-5 h-5 text-charcoal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-charcoal-900 mb-2">How Verification Works</h3>
+              <ul className="text-sm text-stone-600 space-y-1.5 list-disc list-inside leading-relaxed">
+                <li>After sending, copy the transaction hash (TXID)</li>
+                <li>Submit it via the contribution form (coming soon)</li>
+                <li>Admin verifies on-chain within 24 hours</li>
+                <li>Once confirmed, your contribution counts toward the target</li>
+                <li>Duplicate transaction hashes are automatically rejected</li>
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
+      </Tabs>
     </div>
   );
 }
 
-function ContributionMethodCard({ method }: { method: ContributionMethod }) {
+function ContributionMethodTab({ method }: { method: ContributionMethod }) {
+  const isPlaceholder = isPlaceholderAddress(method.address, method.id);
+
   return (
-    <Card
-      variant={method.enabled ? 'default' : 'outlined'}
-      padding="lg"
-      className="relative hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ease-out"
-      hover
-    >
-      {method.enabled && (
-        <Badge variant="success" size="sm" className="absolute top-4 right-4">
-          Active
-        </Badge>
-      )}
-      {!method.enabled && (
-        <Badge variant="default" size="sm" className="absolute top-4 right-4">
-          Unavailable
-        </Badge>
-      )}
+    <TabsContent value={method.id} className="animate-fade-in">
+      <Card
+        variant={method.enabled ? 'default' : 'outlined'}
+        padding="lg"
+        className="relative"
+      >
+        {method.enabled && (
+          <Badge variant="success" size="sm" className="absolute top-4 right-4">
+            Active
+          </Badge>
+        )}
+        {!method.enabled && (
+          <Badge variant="default" size="sm" className="absolute top-4 right-4">
+            Unavailable
+          </Badge>
+        )}
 
-      <CardHeader>
-        <div className="flex items-center gap-3 mb-3">
-          <div className={`w-12 h-12 rounded-xl ${method.bgColor} flex items-center justify-center ${method.color}`}>
-            {method.icon}
+        <CardHeader>
+          <div className="flex items-center gap-3 mb-3">
+            <div className={`w-12 h-12 rounded-xl ${method.bgColor} flex items-center justify-center ${method.color}`}>
+              {method.icon}
+            </div>
+            <div>
+              <CardTitle className="text-lg font-semibold">{method.name}</CardTitle>
+              <CardDescription className="text-xs font-mono text-stone-500">{method.network}</CardDescription>
+            </div>
           </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {/* Address/Username */}
           <div>
-            <CardTitle className="text-lg font-semibold">{method.name}</CardTitle>
-            <CardDescription className="text-xs font-mono text-stone-500">{method.network}</CardDescription>
+            <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1.5">
+              {method.id === 'phantom' ? 'Username' : 'Address'}
+            </label>
+            <div className="flex items-center gap-2">
+              <code className={`flex-1 text-sm font-mono px-3 py-2 rounded-lg break-all ${
+                isPlaceholder ? 'text-stone-500 bg-stone-100' : 'text-charcoal-900 bg-stone-100'
+              }`}>
+                {method.address}
+              </code>
+              <CopyToClipboard
+                text={method.address}
+                disabled={!method.enabled || isPlaceholder}
+                aria-label={`Copy ${method.name} address`}
+              />
+            </div>
+            {isPlaceholder && method.enabled && (
+              <p className="mt-2 text-xs text-amber-600">
+                ⚠️ Placeholder address - configure in admin dashboard
+              </p>
+            )}
           </div>
-        </div>
-      </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Address/Username */}
-        <div>
-          <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1.5">
-            {method.id === 'phantom' ? 'Username' : 'Address'}
-          </label>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 text-sm font-mono text-charcoal-900 bg-stone-100 px-3 py-2 rounded-lg break-all">
-              {method.address}
-            </code>
-            <CopyToClipboard
-              text={method.address}
-              disabled={!method.enabled}
-              aria-label={`Copy ${method.name} address`}
+          {/* QR Code */}
+          <div className="flex justify-center">
+            <QRCode
+              value={method.qrCode}
+              size={120}
+              ariaLabel={`${method.name} payment QR code: ${method.address}`}
             />
           </div>
-        </div>
 
-        {/* QR Code */}
-        <div className="flex justify-center">
-          <QRCode
-            value={method.qrCode}
-            size={120}
-            ariaLabel={`${method.name} payment QR code: ${method.address}`}
-          />
-        </div>
-
-        {/* Instructions */}
-        <div className="pt-2 border-t border-stone-200">
-          <p className="text-sm text-stone-600 leading-relaxed">
-            {method.instructions}
-          </p>
-        </div>
-
-        {!method.enabled && method.disabledReason && (
-          <div className="p-3 rounded-lg bg-stone-100 border border-stone-200">
-            <p className="text-sm text-stone-600">{method.disabledReason}</p>
+          {/* Instructions */}
+          <div className="pt-2 border-t border-stone-200">
+            <p className="text-sm text-stone-600 leading-relaxed">
+              {method.instructions}
+            </p>
           </div>
-        )}
 
-        {method.enabled && (
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => navigator.clipboard.writeText(method.address)}
-          >
-            Copy Address
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+          {!method.enabled && method.disabledReason && (
+            <div className="p-3 rounded-lg bg-stone-100 border border-stone-200">
+              <p className="text-sm text-stone-600">{method.disabledReason}</p>
+            </div>
+          )}
+
+          {method.enabled && !isPlaceholder && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigator.clipboard.writeText(method.address)}
+            >
+              Copy Address
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </TabsContent>
   );
 }

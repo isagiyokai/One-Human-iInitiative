@@ -5,8 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -122,39 +120,35 @@ function AdminLoginForm() {
 
 export default function AdminLoginPage() {
   return (
-    <>
-      <Header />
-      <main className="flex-1 flex items-center justify-center py-16 sm:py-20 lg:py-24 px-4">
-        <React.Suspense fallback={
-          <div className="w-full max-w-md">
-            <div className="text-center mb-10">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-charcoal-100 text-charcoal-900 mb-6 animate-pulse">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal-900">Admin Sign In</h1>
-              <p className="mt-3 text-lg text-stone-600">Enter your credentials to access the dashboard</p>
+    <main className="flex-1 flex items-center justify-center py-16 sm:py-20 lg:py-24 px-4 min-h-screen bg-stone-50">
+      <React.Suspense fallback={
+        <div className="w-full max-w-md">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-charcoal-100 text-charcoal-900 mb-6 animate-pulse">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
             </div>
-            <Card variant="elevated" padding="lg">
-              <CardHeader className="text-center mb-6">
-                <CardTitle className="text-2xl">Welcome Back</CardTitle>
-                <CardDescription>Enter your admin username and password</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-5">
-                  <div className="h-10 bg-stone-200 animate-pulse rounded-lg" />
-                  <div className="h-10 bg-stone-200 animate-pulse rounded-lg" />
-                  <div className="h-12 bg-stone-200 animate-pulse rounded-lg" />
-                </div>
-              </CardContent>
-            </Card>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal-900">Admin Sign In</h1>
+            <p className="mt-3 text-lg text-stone-600">Enter your credentials to access the dashboard</p>
           </div>
-        }>
-          <AdminLoginForm />
-        </React.Suspense>
-      </main>
-      <Footer />
-    </>
+          <Card variant="elevated" padding="lg">
+            <CardHeader className="text-center mb-6">
+              <CardTitle className="text-2xl">Welcome Back</CardTitle>
+              <CardDescription>Enter your admin username and password</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-5">
+                <div className="h-10 bg-stone-200 animate-pulse rounded-lg" />
+                <div className="h-10 bg-stone-200 animate-pulse rounded-lg" />
+                <div className="h-12 bg-stone-200 animate-pulse rounded-lg" />
+              </div>
+            </CardContent>
+            </Card>
+        </div>
+      }>
+        <AdminLoginForm />
+      </React.Suspense>
+    </main>
   );
 }
