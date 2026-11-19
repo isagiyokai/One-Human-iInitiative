@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { campaignSchema } from '@/lib/validators';
 import { validateTargetIncrease } from '@/lib/campaign';
-import { validateBitcoinAddress, validateSolanaAddress, validatePhantomUsername } from '@/lib/utils';
+import { validateBitcoinAddress, validateSolanaAddress } from '@/lib/utils';
 import { verifyAdminApiAuth } from '@/lib/admin-api-auth';
 import { z } from 'zod';
 
@@ -69,7 +69,7 @@ export async function PATCH(request: Request) {
     if (body.status === 'active') {
       const { data: settings, error: settingsError } = await admin
         .from('campaign_settings')
-        .select('bitcoin_address, solana_address, phantom_username')
+        .select('bitcoin_address, solana_address')
         .eq('campaign_id', campaign.id)
         .maybeSingle();
 
@@ -78,18 +78,16 @@ export async function PATCH(request: Request) {
       }
       const placeholderBitcoin = 'bc1qexample00000000000000000000000000000000000';
       const placeholderSolana = 'SolanaExample1111111111111111111111111111111111';
-      const placeholderPhantom = '@exampleusername';
       const hasPlaceholder = settings.bitcoin_address === placeholderBitcoin
         || settings.solana_address === placeholderSolana
-        || settings.phantom_username === placeholderPhantom;
+;
 
       if (
         hasPlaceholder ||
         !validateBitcoinAddress(settings.bitcoin_address || '') ||
-        !validateSolanaAddress(settings.solana_address || '') ||
-        !validatePhantomUsername(settings.phantom_username || '')
+        !validateSolanaAddress(settings.solana_address || '')
       ) {
-        return NextResponse.json({ error: 'Replace the seeded example payment destinations with real, verified wallet addresses and a real Phantom username before activation.' }, { status: 400 });
+        return NextResponse.json({ error: 'Configure valid Bitcoin and Solana wallet addresses before activation.' }, { status: 400 });
       }
     }
 
