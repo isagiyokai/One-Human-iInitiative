@@ -78,9 +78,9 @@ export async function PATCH(request: Request) {
       }
       const placeholderBitcoin = 'bc1qexample00000000000000000000000000000000000';
       const placeholderSolana = 'SolanaExample1111111111111111111111111111111111';
-      const hasPlaceholder = settings.bitcoin_address === placeholderBitcoin
-        || settings.solana_address === placeholderSolana
-;
+      const hasPlaceholder =
+        settings.bitcoin_address === placeholderBitcoin ||
+        settings.solana_address === placeholderSolana;
 
       if (
         hasPlaceholder ||
