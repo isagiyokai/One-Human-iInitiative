@@ -47,7 +47,7 @@ const methodConfigs: Omit<ContributionMethod, 'address' | 'qrCode' | 'enabled' |
     id: 'solana',
     name: 'Solana',
     network: 'SOL',
-    instructions: 'Send SOL or SPL tokens to the address above. Minimum 0.001 SOL for transaction fees.',
+    instructions: 'Send native SOL only to the address above on Solana mainnet. Keep a small amount of SOL available for network fees.',
     icon: (
       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M11.055 3.309l8.553 3.86-1.826 7.304c-.23.92-.822 1.485-1.58 1.425l-6.115-.491 3.573-5.209c.32-.467.148-.96-.246-1.13l-4.807-2.167 1.646-6.584zm1.89 1.588 4.597 2.075-2.739 8.218c-.083.25-.345.25-.428 0L8.433 11.26l3.681-5.363zM14.753 8.49l-3.359 4.897-3.816-.307 3.246-4.69 3.929.1z"/>
@@ -60,7 +60,7 @@ const methodConfigs: Omit<ContributionMethod, 'address' | 'qrCode' | 'enabled' |
 
 ];
 
-function buildMethods(settings: PaymentSettings): ContributionMethod[] {
+function buildMethods(settings: PaymentSettings, campaignActive: boolean): ContributionMethod[] {
   return methodConfigs.map((config) => {
     const isBitcoin = config.id === 'bitcoin';
     const address = isBitcoin ? settings.bitcoin_address : settings.solana_address;
@@ -68,11 +68,11 @@ function buildMethods(settings: PaymentSettings): ContributionMethod[] {
       ...config,
       address,
       qrCode: isBitcoin ? `bitcoin:${address}` : `solana:${address}`,
-      enabled: Boolean(address) && !isPlaceholderAddress(address, config.id),
-      disabledReason: !address
+      enabled: Boolean(address) && !isPlaceholderAddress(address, config.id) && campaignActive,
+      disabledReason: !address || isPlaceholderAddress(address, config.id)
         ? 'Payment address is not configured'
-        : isPlaceholderAddress(address, config.id)
-          ? 'Payment address is not configured'
+        : !campaignActive
+          ? 'The campaign is not currently accepting contributions'
           : undefined,
     };
   });
@@ -88,6 +88,7 @@ function isPlaceholderAddress(address: string, type: string): boolean {
 
 export function ContributionMethods() {
   const [settings, setSettings] = React.useState<PaymentSettings | null>(null);
+  const [campaignActive, setCampaignActive] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [retryCount, setRetryCount] = React.useState(0);
@@ -106,6 +107,7 @@ export function ContributionMethods() {
       const data = await res.json();
       // Handle both old and new API response structures
       setSettings(data.settings || data.content);
+      setCampaignActive(data.campaign?.computed_status === 'active');
       setRetryCount(0);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to load contribution methods. Please try again later.';
@@ -120,7 +122,7 @@ export function ContributionMethods() {
     fetchSettings();
   }, [fetchSettings]);
 
-  const methods = React.useMemo(() => settings ? buildMethods(settings) : [], [settings]);
+  const methods = React.useMemo(() => settings ? buildMethods(settings, campaignActive) : [], [settings, campaignActive]);
   const enabledMethods = methods.filter(m => m.enabled);
   const firstEnabledId = enabledMethods[0]?.id || methods[0]?.id || 'bitcoin';
   const [activeTab, setActiveTab] = React.useState<string>('bitcoin');
@@ -162,7 +164,7 @@ export function ContributionMethods() {
               <CardContent className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1.5">
-                    {config.id === 'phantom' ? 'Username' : 'Address'}
+                    Address
                   </label>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 text-sm font-mono text-charcoal-900 bg-stone-100 px-3 py-2 rounded-lg break-all animate-pulse">
@@ -277,7 +279,7 @@ export function ContributionMethods() {
               <h3 className="font-semibold text-charcoal-900 mb-2">How Verification Works</h3>
               <ul className="text-sm text-stone-600 space-y-1.5 list-disc list-inside leading-relaxed">
                 <li>After sending, copy the transaction hash (TXID)</li>
-                <li>Submit it via the contribution form (coming soon)</li>
+                <li>Submit the transaction hash and amount using the form below</li>
                 <li>Admin verifies on-chain within 24 hours</li>
                 <li>Once confirmed, your contribution counts toward the target</li>
                 <li>Duplicate transaction hashes are automatically rejected</li>
@@ -292,6 +294,51 @@ export function ContributionMethods() {
 
 function ContributionMethodTab({ method }: { method: ContributionMethod }) {
   const isPlaceholder = isPlaceholderAddress(method.address, method.id);
+  const [amount, setAmount] = React.useState('');
+  const [transactionHash, setTransactionHash] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submissionMessage, setSubmissionMessage] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  async function handleContributionSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setSubmissionMessage(null);
+
+    try {
+      if (method.id !== 'bitcoin' && method.id !== 'solana') {
+        throw new Error('Unsupported payment method');
+      }
+
+      const response = await fetch('/api/contributions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentMethod: method.id,
+          transactionHash: transactionHash.trim(),
+          amount: Number(amount),
+          currency: method.network,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Unable to submit this contribution.');
+      }
+
+      setAmount('');
+      setTransactionHash('');
+      setSubmissionMessage({
+        type: 'success',
+        text: 'Transaction submitted. It is now pending manual verification.',
+      });
+    } catch (error) {
+      setSubmissionMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Unable to submit this contribution.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <TabsContent value={method.id} className="animate-fade-in">
@@ -368,6 +415,54 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
             <div className="p-3 rounded-lg bg-stone-100 border border-stone-200">
               <p className="text-sm text-stone-600">{method.disabledReason}</p>
             </div>
+          )}
+
+          {method.enabled && !isPlaceholder && (
+            <form onSubmit={handleContributionSubmit} className="space-y-4 border-t border-stone-200 pt-5">
+              <div>
+                <h3 className="font-semibold text-charcoal-900">Submit your transaction</h3>
+                <p className="mt-1 text-sm text-stone-600">After your transaction is visible on the network, submit its transaction ID and the amount sent. An administrator will verify it manually.</p>
+              </div>
+              <div>
+                <label htmlFor={`${method.id}-amount`} className="mb-1.5 block text-sm font-medium text-charcoal-900">Amount ({method.network})</label>
+                <input
+                  id={`${method.id}-amount`}
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step={method.network === 'BTC' ? '0.00000001' : '0.000000001'}
+                  required
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm focus:border-earth-600 focus:outline-none focus:ring-2 focus:ring-earth-200"
+                  placeholder={method.network === 'BTC' ? '0.001' : '0.5'}
+                />
+              </div>
+              <div>
+                <label htmlFor={`${method.id}-transaction-hash`} className="mb-1.5 block text-sm font-medium text-charcoal-900">Transaction ID</label>
+                <textarea
+                  id={`${method.id}-transaction-hash`}
+                  required
+                  rows={3}
+                  value={transactionHash}
+                  onChange={(event) => setTransactionHash(event.target.value.trim())}
+                  disabled={isSubmitting}
+                  spellCheck={false}
+                  autoComplete="off"
+                  className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 font-mono text-xs focus:border-earth-600 focus:outline-none focus:ring-2 focus:ring-earth-200"
+                  placeholder={method.network === 'BTC' ? '64-character Bitcoin transaction ID' : 'Solana transaction signature'}
+                />
+              </div>
+              {submissionMessage && (
+                <p className={`rounded-lg border p-3 text-sm ${submissionMessage.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'}`} role="status">
+                  {submissionMessage.text}
+                </p>
+              )}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Submit transaction for verification'}
+              </Button>
+            </form>
           )}
 
           {method.enabled && !isPlaceholder && (
