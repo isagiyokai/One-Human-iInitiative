@@ -57,12 +57,12 @@ export function CampaignExplanation({
     .filter(Boolean);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-5 sm:space-y-8">
       <header className="mx-auto max-w-3xl text-center">
         <h2 className="text-3xl font-bold tracking-tight text-charcoal-900 sm:text-4xl">
           {title}
         </h2>
-        <p className="mt-4 text-base leading-relaxed text-stone-600 sm:text-lg">
+        <p className="mt-3 sm:mt-4 text-base leading-relaxed text-stone-600 sm:text-lg">
           {description || defaultDescription}
         </p>
       </header>
@@ -76,7 +76,7 @@ export function CampaignExplanation({
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
         <Card variant="default" padding="lg">
           <CardHeader>
             <CardTitle>My Story</CardTitle>
@@ -108,7 +108,7 @@ export function CampaignExplanation({
           <CardDescription>Simple steps for making a direct contribution</CardDescription>
         </CardHeader>
         <CardContent>
-          <ol className="space-y-4">
+          <ol className="space-y-3 sm:space-y-4">
             {steps.map((step, index) => (
               <li key={index} className="flex items-start gap-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-earth-100 text-sm font-semibold text-earth-800">
