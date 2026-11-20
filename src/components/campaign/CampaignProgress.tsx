@@ -73,10 +73,10 @@ export function CampaignProgress({
   const iconAnimProps = getAnimationProps(reducedMotion, springTransitionFast);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       {/* Main Progress Card */}
       <Card variant="elevated" padding="lg" className="max-w-2xl mx-auto">
-        <CardHeader className="text-center mb-8">
+        <CardHeader className="text-center mb-4 sm:mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
