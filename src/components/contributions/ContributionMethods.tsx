@@ -292,7 +292,6 @@ export function ContributionMethods({
           If buying is not available in your country, use a trusted service supported where you live.
         </p>
       </div>
-Tabs>
     </div>
   );
 }
