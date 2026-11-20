@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { QRCodeComponent as QRCode } from '@/components/ui/QRCode';
-import { CopyToClipboard } from './CopyToClipboard';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { CopyWalletAddressButton } from './CopyWalletAddressButton';
 
 interface PaymentSettings {
   bitcoin_address: string;
@@ -138,17 +137,6 @@ export function ContributionMethods({
 
   const methods = React.useMemo(() => settings ? buildMethods(settings, campaignActive) : [], [settings, campaignActive]);
   const enabledMethods = methods.filter(m => m.enabled);
-  const firstEnabledId = enabledMethods[0]?.id || methods[0]?.id || 'bitcoin';
-  const [activeTab, setActiveTab] = React.useState<string>('bitcoin');
-
-  // Keep the selected tab valid when payment settings arrive or change.
-  React.useEffect(() => {
-    if (methods.length === 0) return;
-    if (!methods.find(m => m.id === activeTab)?.enabled) {
-      setActiveTab(firstEnabledId);
-    }
-  }, [methods, activeTab, firstEnabledId]);
-
   if (isLoading) {
     return (
       <div className="space-y-8 animate-fade-in">
@@ -257,78 +245,60 @@ export function ContributionMethods({
         </p>
       </header>
 
-      {/* Tabbed Contribution Methods - Unified Box */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 bg-stone-100 rounded-xl p-1 mb-6" aria-label="Contribution methods">
-          {methods.map((method) => (
-            <TabsTrigger
-              key={method.id}
-              value={method.id}
-              disabled={!method.enabled}
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed"
-            >
-              <span className="flex items-center justify-center gap-2">
-                <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${method.bgColor} ${method.color}`}>
-                  {method.icon}
-                </span>
-                <span className="font-medium text-xs sm:text-sm">{method.name}</span>
-              </span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
+      {/* Always-visible contribution methods: no tab interaction required on mobile */}
+      <div className="grid gap-6 lg:grid-cols-2">
         {methods.map((method) => (
-          <ContributionMethodTab key={method.id} method={method} />
+          <ContributionMethodCard key={method.id} method={method} />
         ))}
+      </div>
 
-        {/* Verification Notice - outside tabs but within section */}
-        <div className="mt-6 rounded-2xl border border-stone-200 bg-warm-white p-6 sm:p-8 animate-slide-up">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-charcoal-100 flex items-center justify-center">
-              <svg className="w-5 h-5 text-charcoal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-semibold text-charcoal-900 mb-2">How Verification Works</h3>
-              <ul className="text-sm text-stone-600 space-y-1.5 list-disc list-inside leading-relaxed">
-                <li>You can contribute without submitting the form below</li>
-                <li>Optionally share both the amount and transaction ID if you want help matching your transfer</li>
-                <li>I will verify submitted transactions on-chain</li>
-                <li>Confirmed contributions are added to the campaign total</li>
-                <li>Duplicate transaction IDs are automatically rejected</li>
-              </ul>
-            </div>
+      <div className="mt-6 rounded-2xl border border-stone-200 bg-warm-white p-6 sm:p-8">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-charcoal-100 flex items-center justify-center">
+            <svg className="w-5 h-5 text-charcoal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-semibold text-charcoal-900 mb-2">How Verification Works</h3>
+            <ul className="text-sm text-stone-600 space-y-1.5 list-disc list-inside leading-relaxed">
+              <li>You can contribute without submitting the form below</li>
+              <li>Optionally share both the amount and transaction ID if you want help matching your transfer</li>
+              <li>I will verify submitted transactions on-chain</li>
+              <li>Confirmed contributions are added to the campaign total</li>
+              <li>Duplicate transaction IDs are automatically rejected</li>
+            </ul>
           </div>
         </div>
+      </div>
 
-        <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 sm:p-8">
-          <h3 className="font-semibold text-charcoal-900">New to crypto? Try Trust Wallet</h3>
-          <p className="mt-2 text-sm text-stone-600 leading-relaxed">
-            Trust Wallet supports Bitcoin and Solana and lets people buy supported crypto through payment
-            providers inside the app. Buying options depend on the country, payment method, and provider;
-            fees are shown before purchase.
-          </p>
-          <a
-            href="https://trustwallet.com/download"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center justify-center rounded-lg bg-charcoal-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-charcoal-800"
-          >
-            Get Trust Wallet
-          </a>
-          <p className="mt-3 text-xs text-stone-500 leading-relaxed">
-            Before sending, select the correct asset and network: Bitcoin (BTC) on the Bitcoin network,
-            or native SOL on Solana. Check the address carefully. Never share your wallet recovery phrase.
-            If buying is not available in your country, use a trusted service supported where you live.
-          </p>
-        </div>
-      </Tabs>
+      <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 sm:p-8">
+        <h3 className="font-semibold text-charcoal-900">New to crypto? Try Trust Wallet</h3>
+        <p className="mt-2 text-sm text-stone-600 leading-relaxed">
+          Trust Wallet supports Bitcoin and Solana and lets people buy supported crypto through payment
+          providers inside the app. Buying options depend on the country, payment method, and provider;
+          fees are shown before purchase.
+        </p>
+        <a
+          href="https://trustwallet.com/download"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-charcoal-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-charcoal-800"
+        >
+          Get Trust Wallet
+        </a>
+        <p className="mt-3 text-xs text-stone-500 leading-relaxed">
+          Before sending, select the correct asset and network: Bitcoin (BTC) on the Bitcoin network,
+          or native SOL on Solana. Check the address carefully. Never share your wallet recovery phrase.
+          If buying is not available in your country, use a trusted service supported where you live.
+        </p>
+      </div>
+Tabs>
     </div>
   );
 }
 
-function ContributionMethodTab({ method }: { method: ContributionMethod }) {
+function ContributionMethodCard({ method }: { method: ContributionMethod }) {
   const isPlaceholder = isPlaceholderAddress(method.address, method.id);
   const [amount, setAmount] = React.useState('');
   const [transactionHash, setTransactionHash] = React.useState('');
@@ -397,7 +367,7 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
   }
 
   return (
-    <TabsContent value={method.id} className="animate-fade-in">
+    <div className="animate-fade-in">
       <Card
         variant={method.enabled ? 'default' : 'outlined'}
         padding="lg"
@@ -438,10 +408,9 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
               }`}>
                 {method.address}
               </code>
-              <CopyToClipboard
-                text={method.address}
-                disabled={!method.enabled || isPlaceholder}
-                aria-label={`Copy ${method.name} address`}
+              <CopyWalletAddressButton
+                address={method.address}
+                label={`Copy ${method.name} address`}
               />
             </div>
             {isPlaceholder && method.enabled && (
@@ -523,17 +492,8 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
             </form>
           )}
 
-          {method.enabled && !isPlaceholder && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigator.clipboard.writeText(method.address)}
-            >
-              Copy Address
-            </Button>
-          )}
         </CardContent>
       </Card>
-    </TabsContent>
+    </div>
   );
 }
