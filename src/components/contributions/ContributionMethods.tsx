@@ -138,7 +138,7 @@ export function ContributionMethods({
   const methods = React.useMemo(() => settings ? buildMethods(settings, campaignActive) : [], [settings, campaignActive]);
   if (isLoading) {
     return (
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-5 sm:space-y-8 animate-fade-in">
         <header className="text-center max-w-2xl mx-auto">
           <h2 id="contribute-heading" className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal-900">
             Ways to Contribute
@@ -191,7 +191,7 @@ export function ContributionMethods({
 
   if (error || !settings) {
     return (
-      <div className="space-y-8 animate-fade-in">
+      <div className="space-y-5 sm:space-y-8 animate-fade-in">
         <header className="text-center max-w-2xl mx-auto">
           <h2 id="contribute-heading" className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal-900">
             Ways to Contribute
@@ -233,7 +233,7 @@ export function ContributionMethods({
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-5 sm:space-y-8 animate-fade-in">
       <header className="text-center max-w-2xl mx-auto">
         <h2 id="contribute-heading" className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal-900">
           Ways to Contribute
@@ -245,13 +245,13 @@ export function ContributionMethods({
       </header>
 
       {/* Always-visible contribution methods: no tab interaction required on mobile */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {methods.map((method) => (
           <ContributionMethodCard key={method.id} method={method} />
         ))}
       </div>
 
-      <div className="mt-6 rounded-2xl border border-stone-200 bg-warm-white p-6 sm:p-8">
+      <div className="mt-4 sm:mt-6 rounded-2xl border border-stone-200 bg-warm-white p-4 sm:p-8">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-charcoal-100 flex items-center justify-center">
             <svg className="w-5 h-5 text-charcoal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -271,7 +271,7 @@ export function ContributionMethods({
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 sm:p-8">
+      <div className="mt-4 sm:mt-6 rounded-2xl border border-stone-200 bg-white p-4 sm:p-8">
         <h3 className="font-semibold text-charcoal-900">New to crypto? Try Trust Wallet</h3>
         <p className="mt-2 text-sm text-stone-600 leading-relaxed">
           Trust Wallet supports Bitcoin and Solana and lets people buy supported crypto through payment
