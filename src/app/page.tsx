@@ -3,6 +3,7 @@ import { Footer } from '@/components/layout/Footer';
 import { CampaignProgress } from '@/components/campaign/CampaignProgress';
 import { CampaignExplanation } from '@/components/campaign/CampaignExplanation';
 import { ContributionMethods } from '@/components/contributions/ContributionMethods';
+import { WalletAddresses } from '@/components/contributions/WalletAddresses';
 import { ScrollToContribute } from '@/components/campaign/ScrollToContribute';
 import { createClient } from '@/lib/supabase/server';
 
@@ -129,7 +130,7 @@ export default async function HomePage() {
               </div>
               <div className="mt-6 flex flex-col items-center justify-center gap-2">
                 <a
-                  href="#contribute"
+                  href="#wallet-addresses"
                   className="inline-flex min-h-12 w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-earth-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-colors hover:bg-earth-700 focus:outline-none focus:ring-2 focus:ring-earth-500 focus:ring-offset-2 sm:w-auto"
                 >
                   View BTC &amp; SOL contribution addresses
@@ -143,8 +144,15 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Scroll Indicator / CTA to Contribute */}
-        <ScrollToContribute targetId="contribute" />
+        {/* Always-visible server-rendered wallet addresses for mobile and desktop */}
+        <WalletAddresses
+          bitcoinAddress={campaignData?.settings?.bitcoin_address || 'bc1q954s898gv0rajvfau8xusaayurftezad00hm60'}
+          solanaAddress={campaignData?.settings?.solana_address || '4gPvyTiU9SMyoVbEAXXpKe43qAZxBdQfoWjN4LJNyxC6'}
+          campaignActive={campaign?.computed_status === 'active'}
+        />
+
+        {/* Scroll Indicator / CTA to Wallet Addresses */}
+        <ScrollToContribute targetId="wallet-addresses" />
 
         {/* Campaign Progress Section */}
         <section className="py-20 sm:py-24 bg-white" aria-labelledby="progress-heading">
