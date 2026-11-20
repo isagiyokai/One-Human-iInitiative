@@ -86,10 +86,20 @@ function isPlaceholderAddress(address: string, type: string): boolean {
   return address.includes(placeholders[type] || '');
 }
 
-export function ContributionMethods() {
-  const [settings, setSettings] = React.useState<PaymentSettings | null>(null);
-  const [campaignActive, setCampaignActive] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
+interface ContributionMethodsProps {
+  initialSettings: PaymentSettings | null;
+  initialCampaignActive: boolean;
+}
+
+export function ContributionMethods({
+  initialSettings,
+  initialCampaignActive,
+}: ContributionMethodsProps) {
+  // Render the server-loaded wallet addresses immediately. This avoids a blank
+  // contribution area while mobile browsers wait for a client-side API request.
+  const [settings, setSettings] = React.useState<PaymentSettings | null>(initialSettings);
+  const [campaignActive, setCampaignActive] = React.useState(initialCampaignActive);
+  const [isLoading, setIsLoading] = React.useState(!initialSettings);
   const [error, setError] = React.useState<string | null>(null);
   const [retryCount, setRetryCount] = React.useState(0);
 
@@ -119,8 +129,12 @@ export function ContributionMethods() {
   }, []);
 
   React.useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+    // The homepage already loads public payment settings on the server.
+    // Only use the API as a fallback when those settings were unavailable.
+    if (!initialSettings) {
+      fetchSettings();
+    }
+  }, [fetchSettings, initialSettings]);
 
   const methods = React.useMemo(() => settings ? buildMethods(settings, campaignActive) : [], [settings, campaignActive]);
   const enabledMethods = methods.filter(m => m.enabled);
@@ -257,7 +271,7 @@ export function ContributionMethods() {
                 <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${method.bgColor} ${method.color}`}>
                   {method.icon}
                 </span>
-                <span className="hidden sm:inline font-medium">{method.name}</span>
+                <span className="font-medium text-xs sm:text-sm">{method.name}</span>
               </span>
             </TabsTrigger>
           ))}
@@ -419,7 +433,7 @@ function ContributionMethodTab({ method }: { method: ContributionMethod }) {
               Address
             </label>
             <div className="flex items-center gap-2">
-              <code className={`flex-1 text-sm font-mono px-3 py-2 rounded-lg break-all ${
+              <code className={`min-w-0 flex-1 text-xs sm:text-sm font-mono px-3 py-2 rounded-lg break-all ${
                 isPlaceholder ? 'text-stone-500 bg-stone-100' : 'text-charcoal-900 bg-stone-100'
               }`}>
                 {method.address}
