@@ -42,7 +42,7 @@ const defaultHowItWorks = [
   'The amount and transaction ID form is optional. You do not need to submit either to contribute.',
   'If you want help matching a transfer, you may optionally submit both details after sending.',
   'Never send BTC to the Solana address or SOL to the Bitcoin address. Check the asset and network before confirming.',
-].join('\\n');
+].join('\n');
 
 export function CampaignExplanation({
   title = 'Why This Campaign Exists',
@@ -52,8 +52,8 @@ export function CampaignExplanation({
   howItWorks,
 }: CampaignExplanationProps) {
   const steps = (howItWorks || defaultHowItWorks)
-    .split('\\n')
-    .map((step) => step.replace(/^\\s*\\d+[.)]\\s*/, '').trim())
+    .split('\n')
+    .map((step) => step.replace(/^\s*\d+[.)]\s*/, '').trim())
     .filter(Boolean);
 
   return (
