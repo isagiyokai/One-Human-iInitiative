@@ -127,12 +127,24 @@ export default async function HomePage() {
                   {campaign ? getStatusLabel(campaign.computed_status) : 'Campaign setup in progress'}
                 </span>
               </div>
+              <div className="mt-6 flex flex-col items-center justify-center gap-2">
+                <a
+                  href="#contribute"
+                  className="inline-flex min-h-12 w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-earth-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-colors hover:bg-earth-700 focus:outline-none focus:ring-2 focus:ring-earth-500 focus:ring-offset-2 sm:w-auto"
+                >
+                  View BTC &amp; SOL contribution addresses
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7-7 7-7-7" />
+                  </svg>
+                </a>
+                <p className="text-xs text-stone-500">Go straight to the wallet details and copy buttons</p>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Scroll Indicator / CTA to Contribute */}
-        <ScrollToContribute targetId="contribute-heading" />
+        <ScrollToContribute targetId="contribute" />
 
         {/* Campaign Progress Section */}
         <section className="py-20 sm:py-24 bg-white" aria-labelledby="progress-heading">
@@ -166,9 +178,12 @@ export default async function HomePage() {
         </section>
 
         {/* Contribution Methods Section */}
-        <section id="contribute-heading" className="py-20 sm:py-24 bg-white" aria-labelledby="contribute-heading">
+        <section id="contribute" className="scroll-mt-6 py-16 sm:py-24 bg-white" aria-labelledby="contribute-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <ContributionMethods />
+            <ContributionMethods
+              initialSettings={campaignData?.settings ?? null}
+              initialCampaignActive={campaign?.computed_status === 'active'}
+            />
           </div>
         </section>
 
