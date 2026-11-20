@@ -136,7 +136,6 @@ export function ContributionMethods({
   }, [fetchSettings, initialSettings]);
 
   const methods = React.useMemo(() => settings ? buildMethods(settings, campaignActive) : [], [settings, campaignActive]);
-  const enabledMethods = methods.filter(m => m.enabled);
   if (isLoading) {
     return (
       <div className="space-y-8 animate-fade-in">
