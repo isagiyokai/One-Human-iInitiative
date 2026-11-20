@@ -14,11 +14,11 @@ export function WalletAddresses({
   return (
     <section
       id="wallet-addresses"
-      className="scroll-mt-6 border-y border-stone-200 bg-white py-10 sm:py-14"
+      className="scroll-mt-6 border-y border-stone-200 bg-white py-6 sm:py-12"
       aria-labelledby="wallet-addresses-heading"
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto mb-7 max-w-2xl text-center">
+        <div className="mx-auto mb-4 sm:mb-6 max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-earth-700">
             Direct wallet transfer
           </p>
@@ -45,7 +45,7 @@ export function WalletAddresses({
               <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">BTC</span>
             </div>
 
-            <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-stone-500">
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-stone-500">
               Wallet address
             </p>
             <code className="mt-2 block w-full select-all break-all rounded-xl border border-stone-200 bg-white p-3 text-xs leading-6 text-charcoal-900 sm:text-sm">
