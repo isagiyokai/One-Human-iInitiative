@@ -104,7 +104,7 @@ export default async function HomePage() {
       <Header />
       <main className="flex-1" id="main-content">
         {/* Hero Section */}
-        <section className="relative py-24 sm:py-32 lg:py-40 bg-warm-white" aria-labelledby="hero-heading">
+        <section className="relative py-10 sm:py-24 lg:py-32 bg-warm-white" aria-labelledby="hero-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center">
               <h1
@@ -119,10 +119,10 @@ export default async function HomePage() {
                   </>
                 )}
               </h1>
-              <p className="mt-8 text-lg sm:text-xl lg:text-2xl text-stone-600 leading-relaxed max-w-2xl mx-auto text-balance font-medium">
+              <p className="mt-4 sm:mt-6 text-lg sm:text-xl lg:text-2xl text-stone-600 leading-relaxed max-w-2xl mx-auto text-balance font-medium">
                 {heroTagline}
               </p>
-              <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="mt-7 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <span className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-charcoal-100 text-charcoal-700 text-sm font-medium">
                   {campaign?.computed_status === 'active' ? (
                     <span className="relative flex h-2 w-2">
@@ -135,7 +135,7 @@ export default async function HomePage() {
                   {campaign ? getStatusLabel(campaign.computed_status) : 'Campaign setup in progress'}
                 </span>
               </div>
-              <div className="mt-6 flex flex-col items-center justify-center gap-2">
+              <div className="mt-4 flex flex-col items-center justify-center gap-1.5">
                 <a
                   href="#wallet-addresses"
                   className="inline-flex min-h-12 w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-earth-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-colors hover:bg-earth-700 focus:outline-none focus:ring-2 focus:ring-earth-500 focus:ring-offset-2 sm:w-auto"
@@ -165,7 +165,7 @@ export default async function HomePage() {
         <ScrollToContribute targetId="wallet-addresses" />
 
         {/* Campaign Explanation Section */}
-        <section id="campaign-story" className="scroll-mt-6 py-16 sm:py-20 bg-warm-white" aria-labelledby="explanation-heading">
+        <section id="campaign-story" className="scroll-mt-6 py-8 sm:py-16 bg-warm-white" aria-labelledby="explanation-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <CampaignExplanation
               title={content?.story_title || undefined}
@@ -178,7 +178,7 @@ export default async function HomePage() {
         </section>
 
         {/* Campaign Progress Section */}
-        <section className="py-20 sm:py-24 bg-white" aria-labelledby="progress-heading">
+        <section className="py-8 sm:py-16 bg-white" aria-labelledby="progress-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {campaign && (
               <CampaignProgress
@@ -194,7 +194,7 @@ export default async function HomePage() {
         </section>
 
         {/* Contribution Methods Section */}
-        <section id="contribute" className="scroll-mt-6 py-16 sm:py-24 bg-white" aria-labelledby="contribute-heading">
+        <section id="contribute" className="scroll-mt-6 py-8 sm:py-16 bg-white" aria-labelledby="contribute-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <ContributionMethods
               initialSettings={walletSettings}
