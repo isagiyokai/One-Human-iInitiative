@@ -146,6 +146,9 @@ export default async function HomePage() {
                   </svg>
                 </a>
                 <p className="text-xs text-stone-500">Go straight to the wallet details and copy buttons</p>
+                <a href="#campaign-story" className="min-h-11 inline-flex items-center justify-center px-4 text-sm font-semibold text-earth-700 underline underline-offset-4">
+                  Read the story, privacy and how it works
+                </a>
               </div>
             </div>
           </div>
@@ -161,6 +164,19 @@ export default async function HomePage() {
         {/* Scroll Indicator / CTA to Wallet Addresses */}
         <ScrollToContribute targetId="wallet-addresses" />
 
+        {/* Campaign Explanation Section */}
+        <section id="campaign-story" className="scroll-mt-6 py-16 sm:py-20 bg-warm-white" aria-labelledby="explanation-heading">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <CampaignExplanation
+              title={content?.story_title || undefined}
+              description={content?.public_content}
+              story={content?.story_content}
+              whyAnonymous={content?.privacy_content}
+              howItWorks={content?.process_content}
+            />
+          </div>
+        </section>
+
         {/* Campaign Progress Section */}
         <section className="py-20 sm:py-24 bg-white" aria-labelledby="progress-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -174,19 +190,6 @@ export default async function HomePage() {
                 startDate={campaign.start_date}
               />
             )}
-          </div>
-        </section>
-
-        {/* Campaign Explanation Section */}
-        <section className="py-20 sm:py-24 bg-warm-white" aria-labelledby="explanation-heading">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <CampaignExplanation
-              title={content?.story_title || undefined}
-              description={content?.public_content}
-              story={content?.story_content}
-              whyAnonymous={content?.privacy_content}
-              howItWorks={content?.process_content}
-            />
           </div>
         </section>
 
