@@ -84,6 +84,13 @@ export default async function HomePage() {
   const campaign = campaignData?.campaign;
   const content = campaignData?.content;
 
+  // Keep the public contribution details available even if the Supabase
+  // campaign-content request temporarily returns no row.
+  const walletSettings = {
+    bitcoin_address: campaignData?.settings?.bitcoin_address?.trim() || 'bc1q954s898gv0rajvfau8xusaayurftezad00hm60',
+    solana_address: campaignData?.settings?.solana_address?.trim() || '4gPvyTiU9SMyoVbEAXXpKe43qAZxBdQfoWjN4LJNyxC6',
+  };
+
   const heroTitle = content?.hero_title || 'ONE HUMAN. ONE OPPORTUNITY.';
   const heroTagline = content?.hero_tagline || 'A privacy-conscious campaign to provide direct financial support to an anonymous individual. Your generosity stays private. No tracking, no accounts, no public lists.';
 
@@ -146,8 +153,8 @@ export default async function HomePage() {
 
         {/* Always-visible server-rendered wallet addresses for mobile and desktop */}
         <WalletAddresses
-          bitcoinAddress={campaignData?.settings?.bitcoin_address || 'bc1q954s898gv0rajvfau8xusaayurftezad00hm60'}
-          solanaAddress={campaignData?.settings?.solana_address || '4gPvyTiU9SMyoVbEAXXpKe43qAZxBdQfoWjN4LJNyxC6'}
+          bitcoinAddress={walletSettings.bitcoin_address}
+          solanaAddress={walletSettings.solana_address}
           campaignActive={campaign?.computed_status === 'active'}
         />
 
@@ -173,15 +180,13 @@ export default async function HomePage() {
         {/* Campaign Explanation Section */}
         <section className="py-20 sm:py-24 bg-warm-white" aria-labelledby="explanation-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            {content && (
-              <CampaignExplanation
-                title={content.story_title || 'Why This Campaign Exists'}
-                description={content.public_content}
-                story={content.story_content}
-                whyAnonymous={content.privacy_content}
-                howItWorks={content.process_content}
-              />
-            )}
+            <CampaignExplanation
+              title={content?.story_title || undefined}
+              description={content?.public_content}
+              story={content?.story_content}
+              whyAnonymous={content?.privacy_content}
+              howItWorks={content?.process_content}
+            />
           </div>
         </section>
 
@@ -189,7 +194,7 @@ export default async function HomePage() {
         <section id="contribute" className="scroll-mt-6 py-16 sm:py-24 bg-white" aria-labelledby="contribute-heading">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <ContributionMethods
-              initialSettings={campaignData?.settings ?? null}
+              initialSettings={walletSettings}
               initialCampaignActive={campaign?.computed_status === 'active'}
             />
           </div>
